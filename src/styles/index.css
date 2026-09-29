@@ -1,0 +1,23 @@
+/* Design-system entry point (style doc §40).
+   The application imports ONLY this file so page-specific CSS can
+   never drift away from the shared system. */
+
+@import "./tokens.css";
+@import "./reset.css";
+@import "./globals.css";
+@import "./typography.css";
+@import "./utilities.css";
+
+@import "./components/button.css";
+@import "./components/card.css";
+@import "./components/badge.css";
+@import "./components/input.css";
+@import "./components/game-card.css";
+@import "./components/team-card.css";
+@import "./components/court-card.css";
+@import "./components/navigation.css";
+@import "./components/leaderboard.css";
+@import "./components/score.css";
+@import "./components/score-board.css";
+@import "./components/resource.css";
+@import "./public-v2.css";

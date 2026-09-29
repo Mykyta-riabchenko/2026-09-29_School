@@ -1,0 +1,44 @@
+/* Leaderboard (style doc §31). Light card with compact rows. */
+
+.leaderboard {
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.leaderboard__row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 0 var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.leaderboard__row:last-child {
+  border-bottom: 0;
+}
+
+.leaderboard__rank {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--color-surface-blue);
+  color: var(--color-text-600);
+  font-size: var(--font-size-xs);
+  font-weight: 800;
+}
+
+.leaderboard__points {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.leaderboard__row--first {
+  background: var(--color-accent-100);
+}

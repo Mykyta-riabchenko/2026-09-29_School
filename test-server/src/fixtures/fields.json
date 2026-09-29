@@ -1,0 +1,8 @@
+[
+  { "fieldId": "field_04", "name": "Indoor Hall" },
+  { "fieldId": "field_02", "name": "Field 2" },
+  { "fieldId": "field_06", "name": "Stadium North" },
+  { "fieldId": "field_01", "name": "Main Field" },
+  { "fieldId": "field_05", "name": "Training Pitch" },
+  { "fieldId": "field_03", "name": "Outdoor Arena" }
+]

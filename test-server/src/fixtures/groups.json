@@ -1,0 +1,10 @@
+[
+  { "groupId": "g_05", "name": "Group E" },
+  { "groupId": "g_03", "name": "Group C" },
+  { "groupId": "g_01", "name": "Group A" },
+  { "groupId": "g_06", "name": "Group F" },
+  { "groupId": "g_02", "name": "Group B" },
+  { "groupId": "g_04", "name": "Group D" },
+  { "groupId": "g_01_dup", "name": "Group A" },
+  { "groupId": "g_02_dup", "name": "Group B" }
+]

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volleyball Tournament — Public Design</title>
+<style>
+:root{
+  --navy:#17355d; --navy-2:#0d294c; --blue-soft:#eef4fd; --page:#f4f7fb;
+  --white:#fff; --text:#142d4f; --muted:#71829b; --line:#d5dfeb;
+  --orange:#d49432; --orange-dark:#b97817; --orange-soft:#fff4dd;
+  --red:#d94b4b; --green:#2e9b72; --shadow:0 10px 28px rgba(19,45,79,.08);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}
+.sidebar{background:var(--navy);color:#fff;padding:28px 18px;position:sticky;top:0;height:100vh}
+.brand{font-weight:800;font-size:22px;letter-spacing:-.4px;margin:0 4px 34px}
+.nav{display:grid;gap:8px}
+.nav button{border:0;background:transparent;color:#dce7f5;text-align:left;padding:14px 15px;border-radius:11px;font-weight:650;display:flex;gap:12px;align-items:center}
+.nav button:hover,.nav button.active{background:rgba(255,255,255,.14);color:#fff}
+.content{padding:42px;min-width:0}
+.page{display:none;max-width:1400px;margin:auto}
+.page.active{display:block}
+.page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;gap:20px}
+h1{font-size:32px;letter-spacing:-.7px;margin:0}
+h2{font-size:20px;margin:0}
+.sub{color:var(--muted);margin:7px 0 0}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--blue-soft);color:#536b8d;padding:8px 12px;border-radius:10px;font-weight:750;font-size:12px;text-transform:uppercase;letter-spacing:.3px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+/* Games */
+.toolbar{display:grid;grid-template-columns:1fr 170px 170px 170px;gap:12px;margin-bottom:24px}
+.control{height:46px;border:1px solid #c5d2e1;border-radius:10px;background:#fff;color:var(--text);padding:0 14px;outline:none}
+.control:focus{border-color:#6688b4;box-shadow:0 0 0 3px rgba(65,103,153,.12)}
+.game-card{overflow:hidden}
+.game-top{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 12px}
+.status{font-size:11px;font-weight:850;padding:7px 10px;border-radius:8px;text-transform:uppercase}
+.status.live{background:#fff4dc;color:#a56a0a}
+.status.waiting{background:#edf2f8;color:#60738f}
+.status.ended{background:#e8f5ef;color:#267457}
+.field-tag{background:var(--blue-soft);color:#526a8c;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:800}
+.game-body{padding:8px 20px 22px;text-align:center;border-top:1px solid #edf1f5}
+.team-line{font-size:20px;font-weight:750;line-height:1.25;margin-top:14px}
+.vs{font-size:12px;color:var(--muted);font-weight:800;letter-spacing:2px;margin:9px 0}
+.game-score{font-size:30px;font-weight:900;margin-top:13px;letter-spacing:2px}
+.game-meta{padding:12px 18px;border-top:1px solid #edf1f5;color:var(--muted);font-size:12px;display:flex;justify-content:space-between}
+/* Groups / teams */
+.group-card{padding:22px;transition:.2s transform,.2s box-shadow}
+.group-card:hover{transform:translateY(-2px);box-shadow:0 15px 30px rgba(19,45,79,.11)}
+.group-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.team-list{display:grid;gap:9px}
+.team-row{background:#f7f9fc;border:1px solid #e2e9f2;border-radius:9px;padding:12px 13px;display:flex;justify-content:space-between;gap:12px;cursor:pointer}
+.team-row:hover{border-color:#b9c9dd;background:#f2f6fb}
+.team-name{font-weight:700}.team-class{font-size:12px;color:var(--muted)}
+/* Fields */
+.field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.field-card{padding:16px;border:2px solid #e4a33c}
+.field-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.court{position:relative;height:270px;border-radius:13px;background:var(--orange);overflow:hidden;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}
+.court:before{content:"";position:absolute;inset:14px;border:3px solid rgba(255,255,255,.8);border-radius:2px}
+.court:after{content:"";position:absolute;left:50%;top:14px;bottom:14px;width:3px;background:#fff;transform:translateX(-50%);box-shadow:0 0 0 2px rgba(255,255,255,.08)}
+.attack-line{position:absolute;left:18%;right:18%;top:50%;height:3px;background:rgba(255,255,255,.8)}
+.court-info{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:35px}
+.court-teams{font-size:19px;font-weight:800;line-height:1.3}
+.court-vs{font-size:12px;font-weight:800;letter-spacing:2px;margin:10px 0}
+.court-score{font-size:36px;font-weight:900;letter-spacing:3px}
+.court-empty{background:#eef3f9;color:#647993;border:2px dashed #c6d3e3}
+.court-empty:before,.court-empty:after,.court-empty .attack-line{opacity:.25}
+.court-empty .court-info{z-index:2}
+.court-status{position:absolute;top:14px;right:14px;z-index:3;background:#fff;color:#9a671d;padding:7px 10px;border-radius:8px;font-size:11px;font-weight:850}
+.field-games{margin-top:10px;color:var(--muted);font-size:12px;display:flex;justify-content:space-between}
+/* Team modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(5,16,31,.78);display:none;align-items:center;justify-content:center;padding:22px;z-index:20;backdrop-filter:blur(5px)}
+.modal-backdrop.open{display:flex}
+.team-modal{width:min(980px,100%);border-radius:18px;overflow:hidden;background:#101d31;box-shadow:0 30px 100px rgba(0,0,0,.4);position:relative;animation:modalIn .32s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(15px)}to{opacity:1;transform:none}}
+.close{position:absolute;right:16px;top:14px;z-index:10;border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:50%;width:38px;height:38px;font-size:22px}
+.fight-title{text-align:center;background:#fff;color:#111;padding:13px;font-weight:900;font-style:italic;letter-spacing:1px;text-transform:uppercase}
+.score-arena{min-height:410px;display:grid;grid-template-columns:1fr 150px 1fr;position:relative;overflow:hidden}
+.fighter{padding:45px 30px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;position:relative}
+.fighter.blue{background:radial-gradient(circle at 50% 45%,#163b93 0,#07195d 55%,#020a2a 100%)}
+.fighter.red{background:radial-gradient(circle at 50% 45%,#e31b1b 0,#970d12 50%,#390408 100%)}
+.fighter:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.09) 43%,transparent 44%,transparent 58%,rgba(255,255,255,.06) 59%,transparent 60%);animation:energy 2.4s linear infinite}
+@keyframes energy{from{transform:translateX(-30%)}to{transform:translateX(30%)}}
+.fighter-name{position:relative;z-index:2;color:#fff;font-size:30px;font-weight:950;text-transform:uppercase;text-shadow:0 4px 20px rgba(0,0,0,.5)}
+.fighter-class{position:relative;z-index:2;color:rgba(255,255,255,.8);margin-top:8px}
+.big-score{position:relative;z-index:2;color:#fff;font-size:100px;font-weight:950;line-height:1;margin-top:28px;font-style:italic;text-shadow:0 8px 30px rgba(0,0,0,.35);animation:pulseScore 1.8s ease-in-out infinite}
+@keyframes pulseScore{50%{transform:scale(1.035)}}
+.versus{display:flex;align-items:center;justify-content:center;background:#0c1729;color:#fff;font-size:42px;font-weight:950;font-style:italic;z-index:3;clip-path:polygon(20% 0,80% 0,100% 50%,80% 100%,20% 100%,0 50%)}
+.team-stats{background:#fff;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stat{background:#f3f6fa;border-radius:10px;padding:13px;text-align:center}.stat b{display:block;font-size:18px}.stat span{font-size:11px;color:var(--muted);text-transform:uppercase}
+/* responsive */
+@media(max-width:1050px){.app{grid-template-columns:86px 1fr}.sidebar{padding:24px 10px}.brand{font-size:0;text-align:center}.brand:after{content:"🏐";font-size:25px}.nav button{justify-content:center;font-size:0}.nav button span{font-size:20px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.app{display:block}.sidebar{height:auto;position:sticky;z-index:15;padding:10px 12px}.brand{display:none}.nav{display:flex;overflow:auto}.nav button{padding:10px 13px;font-size:12px;white-space:nowrap}.nav button span{font-size:16px}.content{padding:22px 14px}.page-head{align-items:flex-start}.page-head h1{font-size:26px}.grid,.field-grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr 1fr}.toolbar input{grid-column:1/-1}.score-arena{grid-template-columns:1fr 90px 1fr;min-height:330px}.fighter{padding:25px 10px}.fighter-name{font-size:20px}.big-score{font-size:64px}.versus{font-size:27px}.team-stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">Tournament</div>
+    <nav class="nav">
+      <button class="active" data-page="games"><span>🏆</span>Games</button>
+      <button data-page="groups"><span>▱</span>Groups</button>
+      <button data-page="teams"><span>♙</span>Teams</button>
+      <button data-page="fields"><span>⌖</span>Fields</button>
+      <button data-page="rounds"><span>◷</span>Rounds</button>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <section id="games" class="page active">
+      <div class="page-head">
+        <div><h1>Games</h1><p class="sub">Live tournament games and results</p></div>
+        <span class="badge">Read only</span>
+      </div>
+      <div class="toolbar">
+        <input id="search" class="control" placeholder="Search teams...">
+        <select id="roundFilter" class="control"><option value="">All rounds</option><option>Round 1</option><option>Round 2</option><option>Round 3</option></select>
+        <select id="fieldFilter" class="control"><option value="">All fields</option><option>Court 1</option><option>Court 2</option><option>Court 3</option><option>Court 4</option></select>
+        <select id="statusFilter" class="control"><option value="">All statuses</option><option value="live">In play</option><option value="waiting">Not played</option><option value="ended">Ended</option></select>
+      </div>
+      <div id="gamesGrid" class="grid"></div>
+    </section>
+
+    <section id="groups" class="page">
+      <div class="page-head"><div><h1>Groups</h1><p class="sub">Teams organised by tournament group</p></div><span class="badge">4 groups</span></div>
+      <div id="groupsGrid" class="grid"></div>
+    </section>
+
+    <section id="teams" class="page">
+      <div class="page-head"><div><h1>Teams</h1><p class="sub">All participating teams</p></div><span class="badge">Read only</span></div>
+      <div id="teamsGrid" class="grid"></div>
+    </section>
+
+    <section id="fields" class="page">
+      <div class="page-head"><div><h1>Fields</h1><p class="sub">Current games on each volleyball court</p></div><span class="badge">5 courts</span></div>
+      <div id="fieldsGrid" class="grid field-grid"></div>
+    </section>
+
+    <section id="rounds" class="page">
+      <div class="page-head"><div><h1>Rounds</h1><p class="sub">Tournament progress by round</p></div><span class="badge">3 rounds</span></div>
+      <div id="roundsGrid" class="grid"></div>
+    </section>
+  </main>
+</div>
+
+<div id="teamModal" class="modal-backdrop" aria-hidden="true">
+  <div class="team-modal" role="dialog" aria-modal="true">
+    <button class="close" id="closeModal" aria-label="Close">×</button>
+    <div class="fight-title" id="fightTitle">Round 1 result</div>
+    <div class="score-arena">
+      <div class="fighter blue">
+        <div class="fighter-name" id="fighterA">St. Maria School</div>
+        <div class="fighter-class" id="fighterAClass">Group A · U18</div>
+        <div class="big-score" id="fighterAScore">25</div>
+      </div>
+      <div class="versus">VS</div>
+      <div class="fighter red">
+        <div class="fighter-name" id="fighterB">Central High School</div>
+        <div class="fighter-class" id="fighterBClass">Group A · U18</div>
+        <div class="big-score" id="fighterBScore">21</div>
+      </div>
+    </div>
+    <div class="team-stats">
+      <div class="stat"><b id="modalStatus">Ended</b><span>Status</span></div>
+      <div class="stat"><b id="modalField">Court 1</b><span>Field</span></div>
+      <div class="stat"><b id="modalRound">Round 1</b><span>Round</span></div>
+      <div class="stat"><b id="modalRef">Westside Academy</b><span>Referee team</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const teams = [
+  {id:1,name:"St. Maria School",class:"U18",group:"A"},
+  {id:2,name:"Central High School",class:"U18",group:"A"},
+  {id:3,name:"Riverside High School",class:"U18",group:"A"},
+  {id:4,name:"City Sports School",class:"U18",group:"A"},
+  {id:5,name:"Lakeside School",class:"U18",group:"B"},
+  {id:6,name:"Hilltop Academy",class:"U18",group:"B"},
+  {id:7,name:"South High School",class:"U18",group:"B"},
+  {id:8,name:"Grandview Academy",class:"U18",group:"C"},
+  {id:9,name:"Parkside School",class:"U18",group:"C"},
+  {id:10,name:"Westside Academy",class:"U18",group:"C"},
+  {id:11,name:"North High School",class:"U18",group:"D"},
+  {id:12,name:"Green Valley Academy",class:"U18",group:"D"}
+];
+const games = [
+  {id:1,round:"Round 1",field:"Court 1",a:1,b:2,ref:10,sa:25,sb:21},
+  {id:2,round:"Round 1",field:"Court 2",a:3,b:4,ref:8,sa:22,sb:25},
+  {id:3,round:"Round 1",field:"Court 3",a:5,b:6,ref:12,sa:25,sb:18},
+  {id:4,round:"Round 1",field:"Court 4",a:8,b:9,ref:3,sa:null,sb:null},
+  {id:5,round:"Round 2",field:"Court 1",a:10,b:11,ref:2,sa:14,sb:12},
+  {id:6,round:"Round 2",field:"Court 2",a:7,b:12,ref:5,sa:25,sb:19},
+  {id:7,round:"Round 2",field:"Court 3",a:2,b:5,ref:9,sa:null,sb:null},
+  {id:8,round:"Round 3",field:"Court 4",a:6,b:8,ref:1,sa:0,sb:0}
+];
+const fields = ["Court 1","Court 2","Court 3","Court 4","Court 5"];
+
+function team(id){return teams.find(t=>t.id===id)}
+function status(g){
+  if(g.sa == null || g.sb == null) return "waiting";
+  if(g.sa >= 25 || g.sb >= 25) return "ended";
+  return "live";
+}
+function statusLabel(s){return s==="live"?"In play":s==="ended"?"Ended":"Not played"}
+
+function renderGames(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const rf=document.getElementById("roundFilter").value;
+  const ff=document.getElementById("fieldFilter").value;
+  const sf=document.getElementById("statusFilter").value;
+  const out=games.filter(g=>{
+    const a=team(g.a),b=team(g.b),s=status(g);
+    return (!q || `${a.name} ${b.name}`.toLowerCase().includes(q))
+      && (!rf || g.round===rf) && (!ff || g.field===ff) && (!sf || s===sf);
+  }).map(g=>{
+    const a=team(g.a),b=team(g.b),s=status(g);
+    return `<article class="card game-card">
+      <div class="game-top"><span class="status ${s}">${statusLabel(s)}</span><span class="field-tag">${g.field}</span></div>
+      <div class="game-body">
+        <div class="team-line">${a.name}</div>
+        <div class="vs">VS</div>
+        <div class="team-line">${b.name}</div>
+        <div class="game-score">${g.sa == null ? "—" : g.sa} : ${g.sb == null ? "—" : g.sb}</div>
+      </div>
+      <div class="game-meta"><span>${g.round}</span><span>Referee: ${team(g.ref).name}</span></div>
+    </article>`;
+  }).join("");
+  document.getElementById("gamesGrid").innerHTML=out || `<div class="card" style="padding:30px">No games found.</div>`;
+}
+
+function teamButton(t){
+  return `<div class="team-row" data-team="${t.id}"><div><div class="team-name">${t.name}</div><div class="team-class">${t.class}</div></div><span class="badge">${t.group}</span></div>`;
+}
+function renderGroups(){
+  document.getElementById("groupsGrid").innerHTML=["A","B","C","D"].map(g=>{
+    const list=teams.filter(t=>t.group===g);
+    return `<article class="card group-card"><div class="group-title"><h2>Group ${g}</h2><span class="badge">${list.length} teams</span></div><div class="team-list">${list.map(teamButton).join("")}</div></article>`;
+  }).join("");
+}
+function renderTeams(){
+  document.getElementById("teamsGrid").innerHTML=teams.map(t=>`<article class="card group-card" data-team="${t.id}"><div class="group-title"><h2>${t.name}</h2><span class="badge">Group ${t.group}</span></div><div class="team-class">${t.class}</div><div style="margin-top:18px;color:var(--muted);font-size:13px">View tournament games →</div></article>`).join("");
+}
+function renderFields(){
+  document.getElementById("fieldsGrid").innerHTML=fields.map(field=>{
+    const live=games.find(g=>g.field===field && status(g)==="live");
+    const any=games.filter(g=>g.field===field);
+    if(live){
+      const a=team(live.a),b=team(live.b);
+      return `<article class="card field-card"><div class="field-head"><h2>${field}</h2><span class="status live">Live</span></div>
+        <div class="court"><div class="court-status">CURRENT GAME</div><div class="attack-line"></div><div class="court-info"><div class="court-teams">${a.name}</div><div class="court-vs">VS</div><div class="court-teams">${b.name}</div><div class="court-score">${live.sa} : ${live.sb}</div></div></div>
+        <div class="field-games"><span>${any.length} scheduled games</span><span>${live.round}</span></div></article>`;
+    }
+    return `<article class="card field-card"><div class="field-head"><h2>${field}</h2><span class="badge">${any.length} games</span></div>
+      <div class="court court-empty"><div class="court-info"><div style="font-size:18px;font-weight:800">No game currently playing</div><div style="margin-top:7px">Court available</div></div></div>
+      <div class="field-games"><span>${any.length} scheduled games</span><span>Read only</span></div></article>`;
+  }).join("");
+}
+function renderRounds(){
+  document.getElementById("roundsGrid").innerHTML=["Round 1","Round 2","Round 3"].map(r=>{
+    const list=games.filter(g=>g.round===r), ended=list.filter(g=>status(g)==="ended").length,live=list.filter(g=>status(g)==="live").length;
+    return `<article class="card group-card"><div class="group-title"><h2>${r}</h2><span class="badge">${list.length} games</span></div>
+      <div class="team-list"><div class="team-row"><span>Ended</span><b>${ended}</b></div><div class="team-row"><span>In play</span><b>${live}</b></div><div class="team-row"><span>Not played</span><b>${list.length-ended-live}</b></div></div></article>`;
+  }).join("");
+}
+function openTeam(id){
+  const t=team(Number(id));
+  const related=games.filter(g=>g.a===t.id||g.b===t.id).sort((a,b)=>b.id-a.id)[0];
+  if(!related)return;
+  const a=team(related.a),b=team(related.b);
+  document.getElementById("fighterA").textContent=a.name;
+  document.getElementById("fighterB").textContent=b.name;
+  document.getElementById("fighterAClass").textContent=`Group ${a.group} · ${a.class}`;
+  document.getElementById("fighterBClass").textContent=`Group ${b.group} · ${b.class}`;
+  document.getElementById("fighterAScore").textContent=related.sa ?? "—";
+  document.getElementById("fighterBScore").textContent=related.sb ?? "—";
+  document.getElementById("fightTitle").textContent=related.sa==null?"Game not started":`${related.round} · ${statusLabel(status(related))}`;
+  document.getElementById("modalStatus").textContent=statusLabel(status(related));
+  document.getElementById("modalField").textContent=related.field;
+  document.getElementById("modalRound").textContent=related.round;
+  document.getElementById("modalRef").textContent=team(related.ref).name;
+  document.getElementById("teamModal").classList.add("open");
+  document.getElementById("teamModal").setAttribute("aria-hidden","false");
+}
+document.querySelectorAll(".nav button").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById(btn.dataset.page).classList.add("active");
+}));
+["search","roundFilter","fieldFilter","statusFilter"].forEach(id=>document.getElementById(id).addEventListener("input",renderGames));
+document.addEventListener("click",e=>{
+  const el=e.target.closest("[data-team]");
+  if(el)openTeam(el.dataset.team);
+});
+document.getElementById("closeModal").onclick=()=>document.getElementById("teamModal").classList.remove("open");
+document.getElementById("teamModal").addEventListener("click",e=>{if(e.target.id==="teamModal")e.target.classList.remove("open")});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("teamModal").classList.remove("open")});
+renderGames();renderGroups();renderTeams();renderFields();renderRounds();
+</script>
+</body>
+</html>

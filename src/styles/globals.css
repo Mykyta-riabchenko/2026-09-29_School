@@ -1,0 +1,301 @@
+/* Global shell, page layout, states and responsive rules.
+   Visual tokens MUST come from tokens.css; this file only controls
+   layout and composes the design system (style doc §§6, 21, 25–28). */
+
+.app {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.app-shell__content {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  }
+
+  .app-shell__main {
+    min-width: 0;
+  }
+}
+
+/* Page scaffold */
+.page {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding: var(--space-4);
+}
+
+.page--with-bottom-nav {
+  padding-bottom: 88px;
+}
+
+@media (min-width: 1024px) {
+  .page--with-bottom-nav {
+    padding-bottom: var(--space-4);
+  }
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+@media (max-width: 639px) {
+  .page {
+    padding: var(--space-3);
+  }
+
+  .page-header {
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: var(--space-6);
+  }
+}
+
+@media (min-width: 1440px) {
+  .page {
+    padding: var(--space-8);
+  }
+}
+
+@media (max-width: 767px) {
+  .page-content {
+    gap: var(--space-3);
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+}
+
+/* Loading / empty / error states share the card language */
+.state {
+  padding: var(--space-6);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.state h2 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--font-size-lg);
+  color: var(--color-text-900);
+}
+
+.state p {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-700);
+  font-size: var(--font-size-md);
+}
+
+.state .button {
+  margin-top: var(--space-2);
+}
+
+.spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-brand-800);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Skeleton loading uses the final component geometry (§27) */
+.skeleton {
+  overflow: hidden;
+  background:
+    linear-gradient(
+      90deg,
+      var(--color-surface-blue) 25%,
+      #f7f9fc 37%,
+      var(--color-surface-blue) 63%
+    );
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Scores stay visually stable on live updates (§16) */
+.score {
+  color: var(--color-text-900);
+  font-size: var(--font-size-score);
+  line-height: 1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.score--winner {
+  color: var(--color-brand-900);
+}
+
+.score--loser {
+  color: var(--color-text-400);
+}
+
+.score-sep {
+  opacity: 0.6;
+}
+
+/* Offline cache banner uses warning semantic tokens (§25) */
+.offline-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-warning-100);
+  border: 1px solid var(--color-accent-500);
+  border-radius: var(--radius-md);
+}
+
+.offline-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-700);
+}
+
+/* Live connection banner */
+.live-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-700);
+}
+
+/* Game details metadata */
+.meta dt {
+  font-weight: 700;
+  color: var(--color-text-900);
+}
+
+.meta dd {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-700);
+}
+
+/* Desktop tables (cards on phones, §28) */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+}
+
+.data-table th {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-500);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-700);
+}
+
+.data-table tbody tr:hover {
+  background: var(--color-surface-subtle);
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+@media (max-width: 767px) {
+  .table-wrap table {
+    display: block;
+  }
+}
+
+/* Big-screen scoreboard readability */
+@media (min-width: 1440px) {
+  .score {
+    font-size: var(--font-size-2xl);
+  }
+}
+
+/* Focus visibility (§26) */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Restrained motion (§34) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Legacy muted helper (deprecated alias of text-500) */
+.muted {
+  color: var(--color-text-500);
+}

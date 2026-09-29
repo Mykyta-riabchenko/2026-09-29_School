@@ -1,0 +1,182 @@
+[
+  {
+    "gameId": "game_01",
+    "roundId": "round_01",
+    "fieldId": "field_01",
+    "teamAId": "team_01",
+    "teamBId": "team_02",
+    "refereeTeamId": "team_03",
+    "scoreA": 2,
+    "scoreB": 1
+  },
+  {
+    "gameId": "game_02",
+    "roundId": "round_01",
+    "fieldId": "field_02",
+    "teamAId": "team_04",
+    "teamBId": "team_05",
+    "refereeTeamId": "team_01",
+    "scoreA": 0,
+    "scoreB": 0
+  },
+  {
+    "gameId": "game_03",
+    "roundId": "round_02",
+    "fieldId": "field_01",
+    "teamAId": "team_06",
+    "teamBId": "team_07",
+    "refereeTeamId": "team_02",
+    "scoreA": 5,
+    "scoreB": 3
+  },
+  {
+    "gameId": "game_04",
+    "roundId": "round_02",
+    "fieldId": "field_03",
+    "teamAId": "team_01",
+    "teamBId": "team_04",
+    "refereeTeamId": "team_05",
+    "scoreA": 1,
+    "scoreB": 4
+  },
+  {
+    "gameId": "game_05",
+    "roundId": "round_03",
+    "fieldId": "field_02",
+    "teamAId": "team_02",
+    "teamBId": "team_06",
+    "refereeTeamId": "team_07",
+    "scoreA": 3,
+    "scoreB": 3
+  },
+  {
+    "gameId": "game_06",
+    "roundId": "round_03",
+    "fieldId": "field_03",
+    "teamAId": "team_08",
+    "teamBId": "team_09",
+    "refereeTeamId": "team_04",
+    "scoreA": 4,
+    "scoreB": 2
+  },
+  {
+    "gameId": "game_07",
+    "roundId": "round_03",
+    "fieldId": "field_01",
+    "teamAId": "team_10",
+    "teamBId": "team_11",
+    "refereeTeamId": "team_12",
+    "scoreA": 1,
+    "scoreB": 1
+  },
+  {
+    "gameId": "game_08",
+    "roundId": "round_04",
+    "fieldId": "field_04",
+    "teamAId": "team_11",
+    "teamBId": "team_12",
+    "refereeTeamId": "team_13",
+    "scoreA": 2,
+    "scoreB": 0
+  },
+  {
+    "gameId": "game_09",
+    "roundId": "round_04",
+    "fieldId": "field_05",
+    "teamAId": "team_14",
+    "teamBId": "team_15",
+    "refereeTeamId": "team_16",
+    "scoreA": 0,
+    "scoreB": 3
+  },
+  {
+    "gameId": "game_10",
+    "roundId": "round_04",
+    "fieldId": "field_02",
+    "teamAId": "team_17",
+    "teamBId": "team_18",
+    "refereeTeamId": "team_06",
+    "scoreA": 6,
+    "scoreB": 4
+  },
+  {
+    "gameId": "game_11",
+    "roundId": "round_05",
+    "fieldId": "field_06",
+    "teamAId": "team_08",
+    "teamBId": "team_10",
+    "refereeTeamId": "team_07",
+    "scoreA": 3,
+    "scoreB": 5
+  },
+  {
+    "gameId": "game_12",
+    "roundId": "round_05",
+    "fieldId": "field_04",
+    "teamAId": "team_04",
+    "teamBId": "team_09",
+    "refereeTeamId": "team_05",
+    "scoreA": 2,
+    "scoreB": 2
+  },
+  {
+    "gameId": "game_13",
+    "roundId": "round_05",
+    "fieldId": "field_06",
+    "teamAId": "team_19",
+    "teamBId": "team_02",
+    "refereeTeamId": "team_01",
+    "scoreA": 0,
+    "scoreB": 1
+  },
+  {
+    "gameId": "game_14",
+    "roundId": "round_06",
+    "fieldId": "field_03",
+    "teamAId": "team_12",
+    "teamBId": "team_14",
+    "refereeTeamId": "team_11",
+    "scoreA": 7,
+    "scoreB": 5
+  },
+  {
+    "gameId": "game_15",
+    "roundId": "round_06",
+    "fieldId": "field_05",
+    "teamAId": "team_16",
+    "teamBId": "team_20",
+    "refereeTeamId": "team_15",
+    "scoreA": 1,
+    "scoreB": 0
+  },
+  {
+    "gameId": "game_16",
+    "roundId": "round_06",
+    "fieldId": "field_05",
+    "teamAId": "team_05",
+    "teamBId": "team_07",
+    "refereeTeamId": "team_10",
+    "scoreA": 4,
+    "scoreB": 4
+  },
+  {
+    "gameId": "game_17",
+    "roundId": "round_02",
+    "fieldId": "field_04",
+    "teamAId": "team_09",
+    "teamBId": "team_13",
+    "refereeTeamId": "team_04",
+    "scoreA": 2,
+    "scoreB": 3
+  },
+  {
+    "gameId": "game_18",
+    "roundId": "round_01",
+    "fieldId": "field_06",
+    "teamAId": "team_18",
+    "teamBId": "team_15",
+    "refereeTeamId": "team_17",
+    "scoreA": 5,
+    "scoreB": 0
+  }
+]

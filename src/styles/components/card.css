@@ -1,0 +1,31 @@
+/* Cards — the primary visual container (style doc §7). */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.card--compact {
+  padding: var(--space-3);
+}
+
+.card--interactive {
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease,
+    transform 120ms ease;
+}
+
+.card--interactive:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-sm);
+}
+
+.card--interactive:active {
+  transform: translateY(1px);
+}

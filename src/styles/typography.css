@@ -1,0 +1,44 @@
+/* Typography scale + classes (style doc §4). */
+
+.text-page-title {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-lg);
+  font-weight: 700;
+  color: var(--color-text-900);
+}
+
+.text-section-title {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-md);
+  font-weight: 700;
+  color: var(--color-text-900);
+}
+
+.text-body {
+  font-size: var(--font-size-md);
+  line-height: var(--line-md);
+  color: var(--color-text-700);
+}
+
+.text-meta {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-500);
+}
+
+.text-score {
+  font-size: var(--font-size-score);
+  line-height: 1;
+  font-weight: 800;
+  color: var(--color-text-900);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 1440px) {
+  .text-page-title {
+    font-size: var(--font-size-2xl);
+  }
+}

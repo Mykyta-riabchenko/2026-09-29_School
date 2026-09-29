@@ -1,0 +1,51 @@
+/* Score controls (admin doc §10) and small admin layout helpers.
+   Large touch targets; teams stack vertically on narrow screens. */
+
+.score-page {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .score-page {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.score-team {
+  text-align: center;
+}
+
+.score-value {
+  font-size: 3rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-controls {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.score-button {
+  min-width: 68px;
+  min-height: 68px;
+  border-radius: 12px;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+@media (min-width: 768px) {
+  .score-button {
+    min-width: 80px;
+    min-height: 80px;
+  }
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}

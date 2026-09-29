@@ -1,0 +1,22 @@
+[
+  { "teamId": "team_03", "class": "U18", "name": "Zeta Warriors", "groupId": "g_01" },
+  { "teamId": "team_14", "class": "U12", "name": "Bears", "groupId": "g_05" },
+  { "teamId": "team_01", "class": "U18", "name": "Team Alpha", "groupId": "g_01" },
+  { "teamId": "team_11", "class": "U14", "name": "Panthers", "groupId": "g_04" },
+  { "teamId": "team_02", "class": "U18", "name": "Team Beta", "groupId": "g_01" },
+  { "teamId": "team_04", "class": "U16", "name": "Falcons", "groupId": "g_02" },
+  { "teamId": "team_20", "class": "U12", "name": "amber Ants", "groupId": "g_05" },
+  { "teamId": "team_05", "class": "U16", "name": "Eagles", "groupId": "g_02" },
+  { "teamId": "team_08", "class": "U18", "name": "Cobras", "groupId": "g_01" },
+  { "teamId": "team_06", "class": "U18", "name": "Lions", "groupId": "g_03" },
+  { "teamId": "team_12", "class": "U14", "name": "Wolves", "groupId": "g_04" },
+  { "teamId": "team_07", "class": "U18", "name": "Tigers", "groupId": "g_03" },
+  { "teamId": "team_09", "class": "U16", "name": "Dragons", "groupId": "g_02" },
+  { "teamId": "team_15", "class": "U12", "name": "Foxes", "groupId": "g_05" },
+  { "teamId": "team_17", "class": "U18", "name": "Rhinos", "groupId": "g_06" },
+  { "teamId": "team_10", "class": "U18", "name": "Sharks", "groupId": "g_03" },
+  { "teamId": "team_13", "class": "U16", "name": "Hawks", "groupId": "g_04" },
+  { "teamId": "team_18", "class": "U18", "name": "Vipers", "groupId": "g_06" },
+  { "teamId": "team_19", "class": "U16", "name": "Team Alpha", "groupId": "g_04" },
+  { "teamId": "team_16", "class": "U14", "name": "Owls", "groupId": "g_05" }
+]

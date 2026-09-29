@@ -1,0 +1,152 @@
+/* Game card (style doc §§15, 30). Hierarchy: status, round/field
+   metadata, Team A score, Team B score, referee/supporting info. */
+
+.game-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 0;
+  transition:
+    transform 0.18s var(--ease),
+    box-shadow 0.18s var(--ease),
+    border-color 0.18s var(--ease);
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: #bfd0e4;
+}
+
+.game-card--live {
+  border-color: #e9b5b8;
+}
+
+.game-card--completed {
+  border-color: #d3e8df;
+}
+
+.game-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+}
+
+.game-card__teams {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  padding-top: 0;
+}
+
+.game-card__team {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-blue);
+}
+
+.game-card__team-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-900);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+.game-card__score {
+  min-width: 32px;
+  text-align: center;
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-900);
+}
+
+.game-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-500);
+  font-size: var(--font-size-xs);
+}
+
+/* v2 game card pattern (admin design): top badges, body line with
+   round/referee meta, text-action footer row. */
+.game-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 17px 10px;
+}
+
+.game-body {
+  padding: 0 17px 16px;
+  font-size: 16px;
+}
+
+.game-body strong {
+  font-weight: 500;
+}
+
+.game-actions {
+  border-top: 1px solid var(--color-border);
+  padding: 11px 17px;
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+
+.text-action {
+  border: 0;
+  background: transparent;
+  color: #7188a5;
+  padding: 4px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.text-action:hover {
+  color: var(--color-brand-700);
+}
+
+.text-action.danger {
+  color: var(--color-danger-700);
+  margin-left: auto;
+  background: var(--color-danger-100);
+  padding: 8px 13px;
+  border-radius: 8px;
+}
+
+/* Legacy schedule-row layout (deprecated alias). */
+.game-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.game-row__teams {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.game-row__score {
+  display: grid;
+  align-content: center;
+  gap: var(--space-2);
+}

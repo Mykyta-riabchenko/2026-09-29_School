@@ -1,0 +1,54 @@
+/* Team cards (style doc §14). */
+
+.team-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.team-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.team-card__name {
+  margin: 0;
+  color: var(--color-text-900);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.team-card__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.team-card__stat {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-blue);
+  text-align: center;
+}
+
+.team-card__stat-label {
+  display: block;
+  color: var(--color-text-500);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.team-card__stat-value {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-text-900);
+  font-size: var(--font-size-md);
+  font-weight: 800;
+}

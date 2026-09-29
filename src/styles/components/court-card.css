@@ -1,0 +1,54 @@
+/* Field / live-court cards (style doc §17). */
+
+.court-card {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: 1px solid var(--color-accent-500);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  padding: 0;
+}
+
+.court-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+}
+
+.court-card__title {
+  margin: 0;
+  color: var(--color-text-900);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.court-card__court {
+  margin: 0 var(--space-3) var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-600);
+  color: var(--color-text-inverse);
+  text-align: center;
+  font-weight: 700;
+}
+
+.court-card__court-score {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: var(--font-size-score);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.court-card--free {
+  border-color: var(--color-border);
+}
+
+.court-card--free .court-card__court {
+  background: var(--color-surface-blue);
+  color: var(--color-text-700);
+  border: 1px dashed var(--color-border-strong);
+  font-weight: 600;
+}

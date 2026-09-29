@@ -1,0 +1,9 @@
+{
+  "name": "@tournament/contracts",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Pure shared contracts for user + admin frontends (spec §8). No API clients, routers, or WS.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
