@@ -116,9 +116,11 @@ export interface TeamInput {
   name: string;
 }
 function teamToWire(input: TeamInput) {
-  const n = Number(input.groupId);
-  if (!Number.isInteger(n)) throw new AdminApiError(400, "BAD_REQUEST", `Invalid groupId: ${input.groupId}`);
-  return { groupId: n, class: input.class, name: input.name };
+  // Backend uses opaque string IDs (e.g. "1", "g_1790699107454_943").
+  // Pass them through unchanged; only reject missing/blank values.
+  const groupId = String(input.groupId ?? "").trim();
+  if (!groupId) throw new AdminApiError(400, "BAD_REQUEST", `Invalid groupId: ${input.groupId}`);
+  return { groupId, class: input.class, name: input.name };
 }
 export async function createTeam(input: TeamInput): Promise<Team> {
   const data = await request<unknown>("/api/admin/teams", "POST", teamToWire(input));
@@ -169,17 +171,18 @@ export interface GameInput {
   scoreB: number;
 }
 function gameToWire(input: GameInput) {
-  const num = (v: string, field: string) => {
-    const n = Number(v);
-    if (!Number.isInteger(n)) throw new AdminApiError(400, "BAD_REQUEST", `Invalid ${field}: ${v}`);
-    return n;
+  // Same as teams: IDs are opaque strings, pass through unchanged.
+  const id = (v: string, field: string) => {
+    const s = String(v ?? "").trim();
+    if (!s) throw new AdminApiError(400, "BAD_REQUEST", `Invalid ${field}: ${v}`);
+    return s;
   };
   return {
-    roundId: num(input.roundId, "roundId"),
-    fieldId: num(input.fieldId, "fieldId"),
-    teamAId: num(input.teamAId, "teamAId"),
-    teamBId: num(input.teamBId, "teamBId"),
-    refereeTeamId: num(input.refereeTeamId, "refereeTeamId"),
+    roundId: id(input.roundId, "roundId"),
+    fieldId: id(input.fieldId, "fieldId"),
+    teamAId: id(input.teamAId, "teamAId"),
+    teamBId: id(input.teamBId, "teamBId"),
+    refereeTeamId: id(input.refereeTeamId, "refereeTeamId"),
     scoreA: input.scoreA,
     scoreB: input.scoreB,
   };

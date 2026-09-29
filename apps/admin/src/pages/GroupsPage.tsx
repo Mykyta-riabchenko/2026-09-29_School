@@ -2,66 +2,53 @@ import { useState } from "react";
 import { createGroup, deleteGroup, updateGroup } from "../api/client";
 import { useAdminData } from "../hooks/useAdminData";
 import { useAdminState } from "../state/store";
+import { ConfirmDialog, Modal } from "../components/ui";
 
 export function GroupsPage() {
   const { status, error, retry, refresh } = useAdminData();
   const state = useAdminState();
-  const [name, setName] = useState("");
+  const [modal, setModal] = useState<{ id: string | null; name: string } | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   if (status === "loading") return <p role="status">Loading groups…</p>;
   if (status === "error")
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={retry}>
+        <button type="button" className="btn" onClick={retry}>
           Retry
         </button>
       </div>
     );
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    const trimmed = name.trim();
+  async function onSave() {
+    if (!modal) return;
+    const trimmed = modal.name.trim();
     if (!trimmed) {
       setOpError("Group name is required.");
       return;
     }
     setSaving(true);
     try {
-      await createGroup(trimmed);
-      setName("");
+      if (modal.id) await updateGroup(modal.id, trimmed);
+      else await createGroup(trimmed);
+      setModal(null);
       setOpError(null);
       await refresh();
     } catch (err) {
-      setOpError(err instanceof Error ? err.message : "Create failed.");
+      setOpError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function onRename(id: string, current: string) {
-    const next = window.prompt("Rename group", current);
-    if (next === null) return;
-    const trimmed = next.trim();
-    if (!trimmed) {
-      setOpError("Group name is required.");
-      return;
-    }
+  async function onDeleteConfirmed() {
+    if (!deleteId) return;
     try {
-      await updateGroup(id, trimmed);
-      setOpError(null);
-      await refresh();
-    } catch (err) {
-      setOpError(err instanceof Error ? err.message : "Rename failed.");
-    }
-  }
-
-  async function onDelete(id: string) {
-    if (!window.confirm("Delete group?")) return;
-    try {
-      await deleteGroup(id);
+      await deleteGroup(deleteId);
+      setDeleteId(null);
       setOpError(null);
       await refresh();
     } catch (err) {
@@ -72,29 +59,70 @@ export function GroupsPage() {
   const groups = [...state.groups.values()];
 
   return (
-    <section aria-label="Manage groups">
-      <h1>Groups</h1>
-      <form onSubmit={(e) => void onCreate(e)}>
-        <input aria-label="Group name" value={name} onChange={(e) => setName(e.target.value)} placeholder="New group" required />
-        <button type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Create"}
+    <section aria-label="Manage groups" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">CRUD</div>
+          <h1>Gruppen</h1>
+          <p className="muted">Gruppen erstellen, bearbeiten und löschen.</p>
+        </div>
+        <button type="button" className="btn primary" onClick={() => { setOpError(null); setModal({ id: null, name: "" }); }}>
+          ＋ Gruppe
         </button>
-      </form>
-      {opError ? <p role="alert">{opError}</p> : null}
-      {groups.length === 0 ? <p>No groups yet. Create the first group above.</p> : null}
-      <ul>
-        {groups.map((g) => (
-          <li key={g.groupId}>
-            {g.name}{" "}
-            <button type="button" onClick={() => void onRename(g.groupId, g.name)}>
-              Rename
-            </button>{" "}
-            <button type="button" onClick={() => void onDelete(g.groupId)}>
-              Delete
-            </button>
-          </li>
-        ))}
-      </ul>
+      </div>
+      <div className="card">
+        {opError ? <p role="alert">{opError}</p> : null}
+        <div className="list">
+          {groups.length === 0 ? <div className="empty">Keine Gruppen.</div> : null}
+          {groups.map((g) => {
+            const n = [...state.teams.values()].filter((t) => t.groupId === g.groupId).length;
+            return (
+              <div className="list-item" key={g.groupId}>
+                <div className="list-main">
+                  <div className="list-title">Gruppe {g.name}</div>
+                  <div className="list-sub">{n} Teams</div>
+                </div>
+                <div className="actions">
+                  <button type="button" className="btn" onClick={() => { setOpError(null); setModal({ id: g.groupId, name: g.name }); }}>
+                    Bearbeiten
+                  </button>
+                  <button type="button" className="btn danger" onClick={() => setDeleteId(g.groupId)}>
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {modal ? (
+        <Modal title={modal.id ? "Gruppe bearbeiten" : "Neue Gruppe"} onClose={() => setModal(null)}>
+          <div className="form">
+            <label>
+              Name
+              <input aria-label="Group name" value={modal.name} onChange={(e) => setModal({ ...modal, name: e.target.value })} placeholder="z. B. A" />
+            </label>
+            {opError ? <p role="alert">{opError}</p> : null}
+            <div className="form-actions">
+              <button type="button" className="btn" onClick={() => setModal(null)}>
+                Abbrechen
+              </button>
+              <button type="button" className="btn primary" disabled={saving} onClick={() => void onSave()}>
+                {saving ? "Saving…" : "Speichern"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+      {deleteId ? (
+        <ConfirmDialog
+          title="Gruppe löschen?"
+          message="Gruppe wirklich löschen? Nur möglich, wenn keine Teams zugeordnet sind."
+          confirmLabel="Löschen"
+          onCancel={() => setDeleteId(null)}
+          onConfirm={() => void onDeleteConfirmed()}
+        />
+      ) : null}
     </section>
   );
 }

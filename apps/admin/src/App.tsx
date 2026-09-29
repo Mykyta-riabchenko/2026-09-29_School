@@ -1,28 +1,38 @@
 import { BrowserRouter } from "react-router-dom";
 import { AdminProvider } from "./state/store";
-import { AdminNav, AdminRoutes } from "./router";
+import { AdminMobileNav, AdminRoutes, AdminSidebar } from "./router";
 
-// Admin shell. Tournament management application.
+// Admin shell — v6 design: sticky top, sidebar layout, bottom mobile nav.
 // No public live socket here; screens refresh via REST.
 export function AdminApp() {
   return (
     <BrowserRouter>
       <AdminProvider>
         <a className="skip-link" href="#main-content">
-          Skip to content
+          Zum Inhalt springen
         </a>
-        <header className="app-header">
-          <p className="app-header__brand">
-            <a href="/">Tournament – Admin</a>
-          </p>
-          <AdminNav />
+        <header className="top">
+          <div className="brand">
+            <span className="logo" aria-hidden="true">
+              ◒
+            </span>
+            <a href="/">ATIW Volleyballturnier · Admin</a>
+          </div>
         </header>
-        <main className="app-main" id="main-content">
-          <AdminRoutes />
-        </main>
-        <footer className="app-footer">
-          <span>Tournament administration. Changes take effect immediately.</span>
-        </footer>
+        <div className="layout">
+          <aside aria-label="Seitennavigation">
+            <AdminSidebar />
+            <div className="side-note">
+              <b>Admin-Modus</b>
+              <br />
+              Backend ist die einzige Wahrheit. Änderungen wirken sofort.
+            </div>
+          </aside>
+          <main id="main-content">
+            <AdminRoutes />
+          </main>
+        </div>
+        <AdminMobileNav />
       </AdminProvider>
     </BrowserRouter>
   );

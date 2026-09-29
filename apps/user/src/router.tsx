@@ -8,14 +8,17 @@ import { GroupDetailsPage } from "./pages/GroupDetailsPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { TeamDetailsPage } from "./pages/TeamDetailsPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
+import { TreePage } from "./pages/TreePage";
 
-// User router (spec §9). Public routes only. Management tree lives elsewhere.
+// User router (spec §9). Public routes only. v6 nav: Übersicht, Teams,
+// Spiele, Baum, Felder. Groups/Leaderboard stay reachable via overview.
 export function UserRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/games" element={<GamesPage />} />
       <Route path="/games/:id" element={<GameDetailsPage />} />
+      <Route path="/tree" element={<TreePage />} />
       <Route path="/fields" element={<FieldsPage />} />
       <Route path="/groups" element={<GroupsPage />} />
       <Route path="/groups/:id" element={<GroupDetailsPage />} />
@@ -30,32 +33,58 @@ export function UserRoutes() {
 export function NotFoundPage() {
   return (
     <section aria-label="Not found">
-      <h1>Page not found</h1>
-      <p>The page you requested does not exist.</p>
-      <p>
-        <a href="/">Back to home</a>
-      </p>
+      <div className="head">
+        <div>
+          <div className="eyebrow">404</div>
+          <h1>Seite nicht gefunden</h1>
+          <p className="muted">The page you requested does not exist.</p>
+          <p>
+            <a className="btn primary" href="/">
+              Zur Übersicht
+            </a>
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
 
+// v6 sidebar entries (German, with icons like the reference).
+// Note: /games route stays registered below, just hidden from nav.
 const ENTRIES = [
-  { to: "/", label: "Home" },
-  { to: "/games", label: "Games" },
-  { to: "/fields", label: "Fields" },
-  { to: "/groups", label: "Groups" },
-  { to: "/teams", label: "Teams" },
-  { to: "/leaderboard", label: "Leaderboard" },
+  { to: "/", label: "Übersicht", icon: "◉", end: true },
+  { to: "/teams", label: "Teams", icon: "▦", end: false },
+  { to: "/tree", label: "Baum", icon: "⌘", end: false },
+  { to: "/fields", label: "Felder", icon: "⌗", end: false },
 ];
 
-export function UserNav() {
+export function UserSidebar() {
   return (
-    <nav aria-label="Primary" className="app-nav">
+    <nav aria-label="Primary" className="nav">
       {ENTRIES.map((e) => (
-        <NavLink key={e.to} to={e.to}>
+        <NavLink key={e.to} to={e.to} end={e.end} className={({ isActive }) => (isActive ? "active" : "")}>
+          {e.icon} {e.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+export function UserMobileNav() {
+  return (
+    <nav aria-label="Primary" className="mobile-nav">
+      {ENTRIES.map((e) => (
+        <NavLink key={e.to} to={e.to} end={e.end} className={({ isActive }) => (isActive ? "active" : "")}>
+          <span aria-hidden="true">{e.icon}</span>
+          <br />
           {e.label}
         </NavLink>
       ))}
     </nav>
   );
+}
+
+// Back-compat export (old App used UserNav).
+export function UserNav() {
+  return <UserSidebar />;
 }

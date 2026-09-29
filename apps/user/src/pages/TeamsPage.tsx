@@ -1,63 +1,100 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getGroups, getTeams } from "../api/client";
-import { useTournamentState, useTournamentStore } from "../state/store";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { groupNameOf, useTournamentData } from "../components/public-ui";
 
 export function TeamsPage() {
-  const store = useTournamentStore();
-  const state = useTournamentState();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const { state, loading, error, retry } = useTournamentData();
   const [query, setQuery] = useState("");
-  useEffect(() => {
-    let c = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const [teams, groups] = await Promise.all([getTeams(), getGroups()]);
-        if (c) return;
-        store.setTeams(teams);
-        store.setGroups(groups);
-        setError(null);
-      } catch (e) {
-        if (!c) setError(e instanceof Error ? e.message : "Failed to load teams.");
-      } finally {
-        if (!c) setLoading(false);
-      }
-    })();
-    return () => {
-      c = true;
-    };
-  }, [store, attempt]);
+  const [groupId, setGroupId] = useState("ALL");
+  const navigate = useNavigate();
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...state.teams.values()].filter(
+      (t) => (!q || `${t.name} ${t.class}`.toLowerCase().includes(q)) && (groupId === "ALL" || t.groupId === groupId),
+    );
+  }, [state, query, groupId]);
+
   if (loading) return <p role="status">Loading teams…</p>;
   if (error)
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+        <button type="button" className="btn" onClick={retry}>
           Try again
         </button>
       </div>
     );
-  const q = query.trim().toLowerCase();
-  const visible = [...state.teams.values()].filter((t) => !q || t.name.toLowerCase().includes(q));
+
   return (
-    <section aria-label="Teams">
-      <h1>Teams</h1>
-      <label>
-        Search teams
-        <input placeholder="Search teams..." value={query} onChange={(e) => setQuery(e.target.value)} />
-      </label>
-      {visible.length === 0 ? <p>No teams found.</p> : null}
-      <ul>
-        {visible.map((t) => (
-          <li key={t.teamId}>
-            <Link to={`/teams/${encodeURIComponent(t.teamId)}`}>{t.name}</Link> · {t.class} ·{" "}
-            {state.groups.get(t.groupId)?.name ?? t.groupId}
-          </li>
-        ))}
-      </ul>
+    <section aria-label="Teams" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Teilnehmer</div>
+          <h1>Mannschaften</h1>
+        </div>
+        <div className="controls">
+          <input
+            className="input"
+            placeholder="Team oder Klasse suchen …"
+            aria-label="Teams suchen"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+            <option value="ALL">Alle Gruppen</option>
+            {[...state.groups.values()].map((g) => (
+              <option key={g.groupId} value={g.groupId}>
+                Gruppe {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="team-list" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
+        {visible.length === 0 ? <div className="card empty">Kein Team gefunden.</div> : null}
+        {visible.map((t) => {
+          let played = 0;
+          let wins = 0;
+          let points = 0;
+          for (const g of state.games.values()) {
+            if (g.status !== "FINISHED") continue;
+            if (g.teamAId !== t.teamId && g.teamBId !== t.teamId) continue;
+            played += 1;
+            points += g.teamAId === t.teamId ? g.scoreA : g.scoreB;
+            if ((g.teamAId === t.teamId && g.scoreA > g.scoreB) || (g.teamBId === t.teamId && g.scoreB > g.scoreA)) wins += 1;
+          }
+          return (
+            <button
+              key={t.teamId}
+              type="button"
+              className="card team-card"
+              onClick={() => navigate(`/tree?highlight=${encodeURIComponent(t.teamId)}`)}
+              aria-label={`${t.name} im Turnierbaum ansehen`}
+            >
+              <span className="badge scheduled">Gruppe {groupNameOf(state, t.groupId)}</span>
+              <h2>{t.name}</h2>
+              <div className="muted">
+                {t.class} · {played} Spiele · {wins} Siege · {points} Punkte
+              </div>
+              <div className="stats stats-3">
+                <div className="mini">
+                  <b>{played}</b>
+                  <span>Spiele</span>
+                </div>
+                <div className="mini">
+                  <b>{wins}</b>
+                  <span>Siege</span>
+                </div>
+                <div className="mini">
+                  <b>{points}</b>
+                  <span>Punkte</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </section>
   );
 }

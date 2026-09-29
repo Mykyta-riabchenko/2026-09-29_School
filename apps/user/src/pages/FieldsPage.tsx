@@ -1,73 +1,115 @@
-import { useEffect, useState } from "react";
-import { getFields, getGames, getTeams } from "../api/client";
-import { useTournamentState, useTournamentStore } from "../state/store";
-import { statusLabel } from "../components/status";
+import { useMemo, useState } from "react";
+import { StatusBadge, VsOverlay, fieldNameOf, roundOf, teamNameOf, useTournamentData } from "../components/public-ui";
 
 export function FieldsPage() {
-  const store = useTournamentStore();
-  const state = useTournamentState();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const { state, loading, error, retry } = useTournamentData();
+  const [query, setQuery] = useState("");
+  const [groupId, setGroupId] = useState("ALL");
+  const [vsId, setVsId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const [games, teams, fields] = await Promise.all([getGames(), getTeams(), getFields()]);
-        if (cancelled) return;
-        store.setGames(games);
-        store.setTeams(teams);
-        store.setFields(fields);
-        setError(null);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load fields.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [store, attempt]);
+  const fields = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...state.fields.values()].filter((f) => {
+      const names = [...state.games.values()]
+        .filter((g) => g.fieldId === f.fieldId)
+        .map((g) => `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)}`)
+        .join(" ");
+      return `${f.name} ${names}`.toLowerCase().includes(q);
+    });
+  }, [state, query]);
 
   if (loading) return <p role="status">Loading fields…</p>;
   if (error)
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+        <button type="button" className="btn" onClick={retry}>
           Try again
         </button>
       </div>
     );
-  const games = [...state.games.values()];
-  const fields = [...state.fields.values()];
-  if (fields.length === 0) {
-    return (
-      <section aria-label="Fields">
-        <h1>Fields</h1>
-        <p>No fields yet.</p>
-      </section>
-    );
-  }
+
+  const visible = fields.filter((f) => {
+    if (groupId === "ALL") return true;
+    const g = [...state.games.values()].find((x) => x.fieldId === f.fieldId && x.status !== "FINISHED");
+    if (!g) return false;
+    return state.teams.get(g.teamAId)?.groupId === groupId || state.teams.get(g.teamBId)?.groupId === groupId;
+  });
+
   return (
-    <section aria-label="Fields">
-      <h1>Fields</h1>
-      <ul>
-        {[...state.fields.values()].map((f) => {
-          const current = games.find((g) => g.fieldId === f.fieldId && g.status === "RUNNING") ?? null;
+    <section aria-label="Fields" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Live-Courts</div>
+          <h1>Spielfelder</h1>
+        </div>
+        <div className="controls">
+          <input
+            className="input"
+            placeholder="Feld oder Team suchen …"
+            aria-label="Felder suchen"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+            <option value="ALL">Alle Gruppen</option>
+            {[...state.groups.values()].map((g) => (
+              <option key={g.groupId} value={g.groupId}>
+                Gruppe {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="court-list">
+        {visible.length === 0 ? <div className="card empty">Keine Felder gefunden.</div> : null}
+        {visible.map((f) => {
+          const g =
+            [...state.games.values()].find((x) => x.fieldId === f.fieldId && x.status === "RUNNING") ??
+            [...state.games.values()].find((x) => x.fieldId === f.fieldId && x.status === "SCHEDULED") ??
+            null;
           return (
-            <li key={f.fieldId}>
-              {f.name} ·{" "}
-              {current
-                ? `${state.teams.get(current.teamAId)?.name ?? current.teamAId} ${current.scoreA}:${current.scoreB} ${state.teams.get(current.teamBId)?.name ?? current.teamBId} · ${statusLabel(current.status)}`
-                : "Free"}
-            </li>
+            <button
+              key={f.fieldId}
+              type="button"
+              className="card court-card"
+              onClick={() => (g ? setVsId(g.gameId) : undefined)}
+              disabled={!g}
+              aria-label={g ? `${f.name}: ${teamNameOf(state, g.teamAId)} gegen ${teamNameOf(state, g.teamBId)}` : `${f.name}: frei`}
+            >
+              <div className="court-head">
+                <h2>{f.name}</h2>
+                {g ? <StatusBadge status={g.status} /> : <span className="badge scheduled">FREI</span>}
+              </div>
+              <div className="court" aria-hidden="true">
+                {g ? (
+                  <>
+                    <div className="court-side">
+                      {teamNameOf(state, g.teamAId)}
+                      <div className="court-score">{g.scoreA}</div>
+                    </div>
+                    <div className="court-side">
+                      {teamNameOf(state, g.teamBId)}
+                      <div className="court-score">{g.scoreB}</div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="court-side">FREI</div>
+                    <div className="court-side">—</div>
+                  </>
+                )}
+              </div>
+              <div className="court-foot">
+                {g
+                  ? `Runde ${roundOf(state, g.roundId)?.number ?? "?"} · Schiri: ${teamNameOf(state, g.refereeTeamId)} · ${fieldNameOf(state, g.fieldId)}`
+                  : "Kein aktives Spiel"}
+              </div>
+            </button>
           );
         })}
-      </ul>
+      </div>
+      <VsOverlay gameId={vsId} onClose={() => setVsId(null)} />
     </section>
   );
 }

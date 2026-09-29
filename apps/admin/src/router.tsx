@@ -30,32 +30,59 @@ export function AdminRoutes() {
 export function NotFoundPage() {
   return (
     <section aria-label="Not found">
-      <h1>Page not found</h1>
-      <p>The page you requested does not exist.</p>
-      <p>
-        <a href="/">Back to dashboard</a>
-      </p>
+      <div className="head">
+        <div>
+          <div className="eyebrow">404</div>
+          <h1>Seite nicht gefunden</h1>
+          <p className="muted">The page you requested does not exist.</p>
+          <p>
+            <a className="btn primary" href="/">
+              Zum Dashboard
+            </a>
+          </p>
+        </div>
+      </div>
     </section>
   );
 }
 
+// v6 admin nav.
 const ENTRIES = [
-  { to: "/", label: "Dashboard" },
-  { to: "/games", label: "Games" },
-  { to: "/groups", label: "Groups" },
-  { to: "/teams", label: "Teams" },
-  { to: "/rounds", label: "Rounds" },
-  { to: "/fields", label: "Fields" },
+  { to: "/", label: "Dashboard", icon: "▣", end: true },
+  { to: "/groups", label: "Gruppen", icon: "◫", end: false },
+  { to: "/teams", label: "Teams", icon: "▦", end: false },
+  { to: "/games", label: "Spiele", icon: "⚑", end: false },
+  { to: "/rounds", label: "Runden", icon: "◌", end: false },
+  { to: "/fields", label: "Felder", icon: "⌗", end: false },
 ];
 
-export function AdminNav() {
+export function AdminSidebar() {
   return (
-    <nav aria-label="Primary" className="app-nav">
+    <nav aria-label="Primary" className="nav">
       {ENTRIES.map((e) => (
-        <NavLink key={e.to} to={e.to}>
+        <NavLink key={e.to} to={e.to} end={e.end} className={({ isActive }) => (isActive ? "active" : "")}>
+          {e.icon} {e.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+export function AdminMobileNav() {
+  return (
+    <nav aria-label="Primary" className="mobile-nav">
+      {ENTRIES.map((e) => (
+        <NavLink key={e.to} to={e.to} end={e.end} className={({ isActive }) => (isActive ? "active" : "")}>
+          <span aria-hidden="true">{e.icon}</span>
+          <br />
           {e.label}
         </NavLink>
       ))}
     </nav>
   );
+}
+
+// Back-compat export.
+export function AdminNav() {
+  return <AdminSidebar />;
 }

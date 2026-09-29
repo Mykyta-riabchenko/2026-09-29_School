@@ -2,22 +2,24 @@ import { useState } from "react";
 import { createRound, deleteRound, generateConsolation, generateKnockout, generateRoundRobin, updateRound } from "../api/client";
 import { useAdminData } from "../hooks/useAdminData";
 import { useAdminState } from "../state/store";
+import { ConfirmDialog, Modal } from "../components/ui";
 
 export function RoundsPage() {
   const { status, error, retry, refresh } = useAdminData();
   const state = useAdminState();
-  const [number, setNumber] = useState(1);
+  const [modal, setModal] = useState<{ id: string | null; number: number } | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
   const [genMsg, setGenMsg] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   if (status === "loading") return <p role="status">Loading rounds…</p>;
   if (status === "error")
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={retry}>
+        <button type="button" className="btn" onClick={retry}>
           Retry
         </button>
       </div>
@@ -44,46 +46,31 @@ export function RoundsPage() {
     }
   }
 
-  async function onCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!Number.isInteger(number) || number <= 0) {
+  async function onSave() {
+    if (!modal) return;
+    if (!Number.isInteger(modal.number) || modal.number <= 0) {
       setOpError("Round number must be an integer greater than 0.");
       return;
     }
     setSaving(true);
-    setOpError(null);
     try {
-      await createRound(number);
-      setGenMsg(null);
+      if (modal.id) await updateRound(modal.id, modal.number);
+      else await createRound(modal.number);
+      setModal(null);
+      setOpError(null);
       await refresh();
     } catch (err) {
-      setOpError(err instanceof Error ? err.message : "Create failed.");
+      setOpError(err instanceof Error ? err.message : "Save failed.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function onEdit(roundId: string, current: number) {
-    const next = window.prompt("Round number", String(current));
-    if (next === null) return;
-    const parsed = Number(next);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      setOpError("Round number must be an integer greater than 0.");
-      return;
-    }
+  async function onDeleteConfirmed() {
+    if (!deleteId) return;
     try {
-      await updateRound(roundId, parsed);
-      setOpError(null);
-      await refresh();
-    } catch (err) {
-      setOpError(err instanceof Error ? err.message : "Update failed.");
-    }
-  }
-
-  async function onDelete(roundId: string) {
-    if (!window.confirm("Delete round?")) return;
-    try {
-      await deleteRound(roundId);
+      await deleteRound(deleteId);
+      setDeleteId(null);
       setOpError(null);
       await refresh();
     } catch (err) {
@@ -92,59 +79,85 @@ export function RoundsPage() {
   }
 
   const rounds = [...state.rounds.values()].sort((a, b) => a.number - b.number);
+  const nextNumber = rounds.length > 0 ? Math.max(...rounds.map((r) => r.number)) + 1 : 1;
 
   return (
-    <section aria-label="Manage rounds">
-      <h1>Rounds</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void onCreate(e);
-        }}
-      >
-        <input
-          aria-label="Round number"
-          type="number"
-          min={1}
-          step={1}
-          required
-          value={number}
-          onChange={(e) => setNumber(e.target.value === "" ? 0 : Number(e.target.value))}
-        />
-        <button type="submit" disabled={saving}>
-          {saving ? "Saving…" : "Create"}
+    <section aria-label="Manage rounds" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Turnierlogik</div>
+          <h1>Runden</h1>
+          <p className="muted">Runden verwalten und später für Paarungen verwenden.</p>
+        </div>
+        <button type="button" className="btn primary" onClick={() => { setOpError(null); setModal({ id: null, number: nextNumber }); }}>
+          ＋ Runde
         </button>
-      </form>
+      </div>
       {opError ? <p role="alert">{opError}</p> : null}
       {genMsg ? <p role="status">{genMsg}</p> : null}
-      {rounds.length === 0 ? <p>No rounds yet. Create the first round above.</p> : null}
-      <ul>
+      <div className="list">
+        {rounds.length === 0 ? <div className="card empty">Noch keine Runden.</div> : null}
         {rounds.map((r) => (
-          <li key={r.roundId}>
-            Round {r.number}{" "}
-            <button type="button" disabled={generatingId !== null} onClick={() => void run("round-robin", r.roundId)}>
-              Generate round-robin
-            </button>{" "}
-            <button type="button" disabled={generatingId !== null} onClick={() => void run("knockout", r.roundId)}>
-              Generate knockout
-            </button>{" "}
-            <button type="button" disabled={generatingId !== null} onClick={() => void run("consolation", r.roundId)}>
-              Generate consolation
-            </button>{" "}
-            <button type="button" onClick={() => void onEdit(r.roundId, r.number)}>
-              Edit
-            </button>{" "}
-            <button
-              type="button"
-              onClick={() => {
-                void onDelete(r.roundId);
-              }}
-            >
-              Delete
-            </button>
-          </li>
+          <div className="list-item" key={r.roundId}>
+            <div className="list-main">
+              <div className="list-title">Runde {r.number}</div>
+              <div className="list-sub">{[...state.games.values()].filter((g) => g.roundId === r.roundId).length} Spiele</div>
+            </div>
+            <div className="actions">
+              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("round-robin", r.roundId)}>
+                Generate round-robin
+              </button>
+              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("knockout", r.roundId)}>
+                Generate knockout
+              </button>
+              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("consolation", r.roundId)}>
+                Generate consolation
+              </button>
+              <button type="button" className="btn" onClick={() => { setOpError(null); setModal({ id: r.roundId, number: r.number }); }}>
+                Bearbeiten
+              </button>
+              <button type="button" className="btn danger" onClick={() => setDeleteId(r.roundId)}>
+                Löschen
+              </button>
+            </div>
+          </div>
         ))}
-      </ul>
+      </div>
+      {modal ? (
+        <Modal title={modal.id ? "Runde bearbeiten" : "Neue Runde"} onClose={() => setModal(null)}>
+          <div className="form">
+            <label>
+              Nummer
+              <input
+                aria-label="Round number"
+                type="number"
+                min={1}
+                step={1}
+                value={modal.number}
+                onChange={(e) => setModal({ ...modal, number: e.target.value === "" ? 0 : Number(e.target.value) })}
+              />
+            </label>
+            {opError ? <p role="alert">{opError}</p> : null}
+            <div className="form-actions">
+              <button type="button" className="btn" onClick={() => setModal(null)}>
+                Abbrechen
+              </button>
+              <button type="button" className="btn primary" disabled={saving} onClick={() => void onSave()}>
+                {saving ? "Saving…" : "Speichern"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      ) : null}
+      {deleteId ? (
+        <ConfirmDialog
+          title="Runde löschen?"
+          message="Runde wirklich löschen? Nur möglich ohne zugeordnete Spiele."
+          confirmLabel="Löschen"
+          onCancel={() => setDeleteId(null)}
+          onConfirm={() => void onDeleteConfirmed()}
+        />
+      ) : null}
     </section>
   );
 }

@@ -1,154 +1,179 @@
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getFields, getGames, getGroups, getRounds, getTeams } from "../api/client";
-import { useTournamentState, useTournamentStore } from "../state/store";
-import { useLiveStatus } from "../live/live";
-import { statusLabel } from "../components/status";
-import { sortRoundsByNumber } from "../../../../packages/contracts/src/index";
+import {
+  StatusBadge,
+  VsOverlay,
+  fieldNameOf,
+  groupNameOf,
+  roundOf,
+  teamClassOf,
+  teamNameOf,
+  useTournamentData,
+} from "../components/public-ui";
 
 // Public tournament landing (spec §3). Tournament presentation only:
 // current round, live games, fields, groups, leaderboard, public nav.
 // No management controls exist here.
 export function LandingPage() {
-  const store = useTournamentStore();
-  const state = useTournamentState();
-  const live = useLiveStatus();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const { state, loading, error, retry } = useTournamentData();
+  const [query, setQuery] = useState("");
+  const [groupId, setGroupId] = useState("ALL");
+  const [roundId, setRoundId] = useState("ALL");
+  const [vsId, setVsId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const [games, teams, fields, rounds, groups] = await Promise.all([
-          getGames(),
-          getTeams(),
-          getFields(),
-          getRounds(),
-          getGroups(),
-        ]);
-        if (cancelled) return;
-        store.setGames(games);
-        store.setTeams(teams);
-        store.setFields(fields);
-        store.setRounds(rounds);
-        store.setGroups(groups);
-        setError(null);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load.");
-      } finally {
-        if (!cancelled) setLoading(false);
+  const games = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...state.games.values()].filter((g) => {
+      if (groupId !== "ALL") {
+        const ga = state.teams.get(g.teamAId)?.groupId;
+        const gb = state.teams.get(g.teamBId)?.groupId;
+        if (ga !== groupId && gb !== groupId) return false;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [store, attempt]);
+      if (roundId !== "ALL" && g.roundId !== roundId) return false;
+      if (!q) return true;
+      const txt =
+        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} ${roundOf(state, g.roundId)?.number ?? ""}`.toLowerCase();
+      return txt.includes(q);
+    });
+  }, [state, query, groupId, roundId]);
 
-  const games = [...state.games.values()];
-  const rounds = sortRoundsByNumber([...state.rounds.values()]);
-  const currentRound = rounds.length > 0 ? rounds[rounds.length - 1] : null;
-  const liveGames = games.filter((g) => g.status === "RUNNING");
-  const leaderboard = [...state.teams.values()]
-    .map((t) => {
+  const liveCount = [...state.games.values()].filter((g) => g.status === "RUNNING").length;
+
+  const leaderboard = useMemo(() => {
+    const rows = [...state.teams.values()].map((t) => {
       let wins = 0;
       let played = 0;
-      for (const g of games) {
+      let points = 0;
+      for (const g of state.games.values()) {
         if (g.status !== "FINISHED") continue;
         if (g.teamAId !== t.teamId && g.teamBId !== t.teamId) continue;
         played += 1;
-        const aWon = g.scoreA > g.scoreB && g.teamAId === t.teamId;
-        const bWon = g.scoreB > g.scoreA && g.teamBId === t.teamId;
-        if (aWon || bWon) wins += 1;
+        points += g.teamAId === t.teamId ? g.scoreA : g.scoreB;
+        if ((g.teamAId === t.teamId && g.scoreA > g.scoreB) || (g.teamBId === t.teamId && g.scoreB > g.scoreA)) wins += 1;
       }
-      return { team: t, wins, played };
-    })
-    .sort((a, b) => b.wins - a.wins || a.team.name.localeCompare(b.team.name))
-    .slice(0, 8);
+      return { team: t, wins, played, points };
+    });
+    rows.sort((a, b) => b.wins - a.wins || b.points - a.points || a.team.name.localeCompare(b.team.name));
+    return rows;
+  }, [state]);
 
-  const teamName = (id: string) => state.teams.get(id)?.name ?? id;
-  const fieldName = (id: string) => state.fields.get(id)?.name ?? id;
+  const upcoming = games.filter((g) => g.status !== "FINISHED");
 
   return (
-    <section aria-label="Tournament landing">
-      <h1>Tournament</h1>
-      <p className="live-banner" aria-live="polite">
-        <span className={live.status === "connected" ? "live-dot" : "live-dot live-dot--bad"} aria-hidden="true" />
-        Live tournament overview. Live: {live.status}{" "}
-        {live.status === "failed" || live.status === "disconnected" ? (
-          <button type="button" onClick={live.retry}>
-            Reconnect
-          </button>
-        ) : null}
-      </p>
-      {loading ? (
-        <p role="status">Loading tournament…</p>
-      ) : null}
+    <section aria-label="Tournament landing" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Live-Turnier</div>
+          <h1>ATIW Volleyballturnier</h1>
+        </div>
+        <div className="controls">
+          <input
+            className="input"
+            placeholder="Team oder Spiel suchen …"
+            aria-label="Team oder Spiel suchen"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+            <option value="ALL">Alle Gruppen</option>
+            {[...state.groups.values()].map((g) => (
+              <option key={g.groupId} value={g.groupId}>
+                Gruppe {g.name}
+              </option>
+            ))}
+          </select>
+          <select className="select" aria-label="Runde filtern" value={roundId} onChange={(e) => setRoundId(e.target.value)}>
+            <option value="ALL">Alle Runden</option>
+            {[...state.rounds.values()]
+              .sort((a, b) => a.number - b.number)
+              .map((r) => (
+                <option key={r.roundId} value={r.roundId}>
+                  Runde {r.number}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
+
+      {loading ? <p role="status">Loading tournament…</p> : null}
       {error ? (
         <div>
           <p role="alert">{error}</p>
-          <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+          <button type="button" className="btn" onClick={retry}>
             Try again
           </button>
         </div>
       ) : null}
-      <h2>Current round</h2>
-      <p>{currentRound ? `Round ${currentRound.number}` : "No rounds yet"}</p>
-      <h2>Live games</h2>
-      {liveGames.length === 0 ? (
-        <p>No live games right now.</p>
-      ) : (
-        <ul>
-          {liveGames.map((g) => (
-            <li key={g.gameId}>
-              <Link to={`/games/${encodeURIComponent(g.gameId)}`}>
-                {teamName(g.teamAId)} {g.scoreA} : {g.scoreB} {teamName(g.teamBId)} · {fieldName(g.fieldId)} · {statusLabel(g.status)}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <h2>Fields</h2>
-      {[...state.fields.values()].length === 0 ? (
-        <p>No fields yet.</p>
-      ) : (
-        <ul>
-          {[...state.fields.values()].map((f) => (
-            <li key={f.fieldId}>{f.name}</li>
-          ))}
-        </ul>
-      )}
-      <h2>Groups</h2>
-      {[...state.groups.values()].length === 0 ? (
-        <p>No groups yet.</p>
-      ) : (
-        <ul>
-          {[...state.groups.values()].map((g) => (
-            <li key={g.groupId}>
-              <Link to={`/groups/${encodeURIComponent(g.groupId)}`}>{g.name}</Link>
-            </li>
-          ))}
-        </ul>
-      )}
-      <h2>Leaderboard</h2>
-      {leaderboard.length === 0 ? (
-        <p>No leaderboard entries yet.</p>
-      ) : (
-        <ul>
-          {leaderboard.map(({ team, wins, played }) => (
-            <li key={team.teamId}>
-              <Link to={`/teams/${encodeURIComponent(team.teamId)}`}>{team.name}</Link> · {wins} wins / {played} played
-            </li>
-          ))}
-        </ul>
-      )}
-      <nav aria-label="Footer">
-        <Link to="/games">Games</Link> | <Link to="/fields">Fields</Link> |{" "}
-        <Link to="/groups">Groups</Link> | <Link to="/teams">Teams</Link> |{" "}
-        <Link to="/leaderboard">Leaderboard</Link>
-      </nav>
+
+      <div className="grid g2">
+        <div>
+          <div className="section-head">
+            <h2>Live &amp; geplant</h2>
+            <small>{liveCount} live</small>
+          </div>
+          <div className="match-list">
+            {upcoming.length === 0 ? <div className="card empty">Keine passenden Spiele.</div> : null}
+            {upcoming.map((g) => (
+              <button key={g.gameId} type="button" className="card match" onClick={() => setVsId(g.gameId)} aria-label={`${teamNameOf(state, g.teamAId)} gegen ${teamNameOf(state, g.teamBId)} öffnen`}>
+                <div className="match-top">
+                  <StatusBadge status={g.status} />
+                  <span className="match-meta">
+                    {fieldNameOf(state, g.fieldId)} · Runde {roundOf(state, g.roundId)?.number ?? "?"}
+                  </span>
+                </div>
+                <div className="versus-rows">
+                  <div className="versus-row">
+                    <div>
+                      <div className="team-name">{teamNameOf(state, g.teamAId)}</div>
+                      <div className="team-class">{teamClassOf(state, g.teamAId)}</div>
+                    </div>
+                    <div className="match-score">{g.scoreA}</div>
+                  </div>
+                  <div className="divider" />
+                  <div className="versus-row">
+                    <div>
+                      <div className="team-name">{teamNameOf(state, g.teamBId)}</div>
+                      <div className="team-class">{teamClassOf(state, g.teamBId)}</div>
+                    </div>
+                    <div className="match-score">{g.scoreB}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <div className="section-head">
+            <h2>Gruppenwertung</h2>
+            <Link to="/leaderboard" className="btn btn-sm">
+              Alle ansehen →
+            </Link>
+          </div>
+          <div className="card">
+            <div className="leaderboard">
+              {leaderboard.length === 0 ? <div className="empty">Noch keine Wertung.</div> : null}
+              {leaderboard.map(({ team, wins, played, points }, i) => (
+                <div className="leader" key={team.teamId}>
+                  <div className="rank">{i + 1}</div>
+                  <div>
+                    <div className="leader-name">
+                      <Link to={`/teams/${encodeURIComponent(team.teamId)}`}>{team.name}</Link>
+                    </div>
+                    <div className="leader-sub">
+                      Gruppe {groupNameOf(state, team.groupId)} · {team.class} · {played} Spiele · {points} Punkte
+                    </div>
+                  </div>
+                  <div className="points" aria-label={`${wins} Siege, ${points} Punkte`}>
+                    {wins}
+                    <span className="points-sub">{points}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <VsOverlay gameId={vsId} onClose={() => setVsId(null)} />
     </section>
   );
 }

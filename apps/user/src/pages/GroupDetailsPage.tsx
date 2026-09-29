@@ -12,12 +12,12 @@ export function GroupDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
+
   useEffect(() => {
     if (!id) {
       setLoading(false);
       return;
     }
-    // useParams already decodes; use raw id to avoid double-decode errors.
     const lookupId = id;
     let c = false;
     (async () => {
@@ -40,12 +40,13 @@ export function GroupDetailsPage() {
       c = true;
     };
   }, [id, store, attempt]);
+
   if (loading) return <p role="status">Loading group…</p>;
   if (error)
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+        <button type="button" className="btn" onClick={() => setAttempt((a) => a + 1)}>
           Try again
         </button>
         <p>
@@ -54,22 +55,32 @@ export function GroupDetailsPage() {
       </div>
     );
   if (!group) return <p role="status">Loading group…</p>;
+
   return (
-    <section aria-label="Group details">
-      <Link to="/groups" aria-label="Back to groups">
-        Back
-      </Link>
-      <h1>{group.name}</h1>
+    <section aria-label="Group details" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Gruppe</div>
+          <h1>{group.name}</h1>
+          <p className="muted">
+            <Link to="/groups" aria-label="Back to groups">
+              ← Alle Gruppen
+            </Link>
+          </p>
+        </div>
+      </div>
       {teams.length === 0 ? (
-        <p>No teams in this group yet.</p>
+        <div className="card empty">No teams in this group yet.</div>
       ) : (
-        <ul>
+        <div className="team-list" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
           {teams.map((t) => (
-            <li key={t.teamId}>
-              <Link to={`/teams/${encodeURIComponent(t.teamId)}`}>{t.name}</Link> · {t.class}
-            </li>
+            <Link key={t.teamId} to={`/teams/${encodeURIComponent(t.teamId)}`} className="card team-card" style={{ textDecoration: "none" }}>
+              <span className="badge scheduled">Gruppe {group.name}</span>
+              <h2>{t.name}</h2>
+              <div className="muted">{t.class}</div>
+            </Link>
           ))}
-        </ul>
+        </div>
       )}
     </section>
   );

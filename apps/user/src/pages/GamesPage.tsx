@@ -1,97 +1,100 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { getFields, getGames, getRounds, getTeams, getGroups } from "../api/client";
-import { useTournamentState, useTournamentStore } from "../state/store";
-import { statusLabel } from "../components/status";
+import { useMemo, useState } from "react";
+import { StatusBadge, VsOverlay, fieldNameOf, roundOf, teamNameOf, useTournamentData } from "../components/public-ui";
 
 export function GamesPage() {
-  const store = useTournamentStore();
-  const state = useTournamentState();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { state, loading, error, retry } = useTournamentData();
   const [query, setQuery] = useState("");
-  const [roundId, setRoundId] = useState("");
-  const [attempt, setAttempt] = useState(0);
+  const [groupId, setGroupId] = useState("ALL");
+  const [roundId, setRoundId] = useState("ALL");
+  const [vsId, setVsId] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const [games, teams, fields, rounds, groups] = await Promise.all([
-          getGames(),
-          getTeams(),
-          getFields(),
-          getRounds(),
-          getGroups(),
-        ]);
-        if (cancelled) return;
-        store.setGames(games);
-        store.setTeams(teams);
-        store.setFields(fields);
-        store.setRounds(rounds);
-        store.setGroups(groups);
-        setError(null);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed.");
-      } finally {
-        if (!cancelled) setLoading(false);
+  const games = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return [...state.games.values()].filter((g) => {
+      if (roundId !== "ALL" && g.roundId !== roundId) return false;
+      if (groupId !== "ALL") {
+        const ga = state.teams.get(g.teamAId)?.groupId;
+        const gb = state.teams.get(g.teamBId)?.groupId;
+        if (ga !== groupId && gb !== groupId) return false;
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [store, attempt]);
-
-  const q = query.trim().toLowerCase();
-  const games = [...state.games.values()].filter((g) => {
-    if (roundId && g.roundId !== roundId) return false;
-    if (!q) return true;
-    const a = state.teams.get(g.teamAId)?.name ?? "";
-    const b = state.teams.get(g.teamBId)?.name ?? "";
-    return `${a} ${b}`.toLowerCase().includes(q);
-  });
+      if (!q) return true;
+      const txt =
+        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} Runde ${roundOf(state, g.roundId)?.number ?? ""}`.toLowerCase();
+      return txt.includes(q);
+    });
+  }, [state, query, groupId, roundId]);
 
   if (loading) return <p role="status">Loading games…</p>;
   if (error)
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+        <button type="button" className="btn" onClick={retry}>
           Try again
         </button>
       </div>
     );
 
   return (
-    <section aria-label="Games">
-      <h1>Games</h1>
-      <label>
-        Search teams
-        <input placeholder="Search teams..." value={query} onChange={(e) => setQuery(e.target.value)} />
-      </label>
-      <label>
-        Filter by round
-        <select value={roundId} onChange={(e) => setRoundId(e.target.value)}>
-          <option value="">All rounds</option>
-          {[...state.rounds.values()].map((r) => (
-            <option key={r.roundId} value={r.roundId}>
-              Round {r.number}
-            </option>
+    <section aria-label="Games" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Spielplan</div>
+          <h1>Spiele</h1>
+        </div>
+        <div className="controls">
+          <input
+            className="input"
+            placeholder="Team, Feld oder Runde …"
+            aria-label="Spiele suchen"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+            <option value="ALL">Alle Gruppen</option>
+            {[...state.groups.values()].map((g) => (
+              <option key={g.groupId} value={g.groupId}>
+                Gruppe {g.name}
+              </option>
+            ))}
+          </select>
+          <select className="select" aria-label="Runde filtern" value={roundId} onChange={(e) => setRoundId(e.target.value)}>
+            <option value="ALL">Alle Runden</option>
+            {[...state.rounds.values()]
+              .sort((a, b) => a.number - b.number)
+              .map((r) => (
+                <option key={r.roundId} value={r.roundId}>
+                  Runde {r.number}
+                </option>
+              ))}
+          </select>
+        </div>
+      </div>
+      <div className="card">
+        <div className="schedule-list">
+          {games.length === 0 ? <div className="empty">Keine Spiele.</div> : null}
+          {games.map((g) => (
+            <button key={g.gameId} type="button" className="schedule-item" onClick={() => setVsId(g.gameId)}>
+              <div className="schedule-round">
+                Runde {roundOf(state, g.roundId)?.number ?? "?"}
+                <div className="schedule-sub">{fieldNameOf(state, g.fieldId)}</div>
+              </div>
+              <div className="schedule-teams">
+                <b>{teamNameOf(state, g.teamAId)}</b>
+                <br />
+                {teamNameOf(state, g.teamBId)}
+              </div>
+              <div className="schedule-score">
+                {g.scoreA}:{g.scoreB}
+                <div style={{ marginTop: 5 }}>
+                  <StatusBadge status={g.status} />
+                </div>
+              </div>
+            </button>
           ))}
-        </select>
-      </label>
-      <ul>
-        {games.map((g) => (
-          <li key={g.gameId}>
-            <Link to={`/games/${encodeURIComponent(g.gameId)}`}>
-              {state.teams.get(g.teamAId)?.name ?? g.teamAId} {g.scoreA} : {g.scoreB}{" "}
-              {state.teams.get(g.teamBId)?.name ?? g.teamBId} · {statusLabel(g.status)}
-            </Link>
-          </li>
-        ))}
-      </ul>
-      {games.length === 0 ? <p>No games found.</p> : null}
+        </div>
+      </div>
+      <VsOverlay gameId={vsId} onClose={() => setVsId(null)} />
     </section>
   );
 }

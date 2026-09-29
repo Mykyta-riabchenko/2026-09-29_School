@@ -1,40 +1,14 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getGroups, getTeams } from "../api/client";
-import { useTournamentState, useTournamentStore } from "../state/store";
+import { groupNameOf, useTournamentData } from "../components/public-ui";
 
 export function GroupsPage() {
-  const store = useTournamentStore();
-  const state = useTournamentState();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [attempt, setAttempt] = useState(0);
-  useEffect(() => {
-    let c = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const [groups, teams] = await Promise.all([getGroups(), getTeams()]);
-        if (c) return;
-        store.setGroups(groups);
-        store.setTeams(teams);
-        setError(null);
-      } catch (e) {
-        if (!c) setError(e instanceof Error ? e.message : "Failed to load groups.");
-      } finally {
-        if (!c) setLoading(false);
-      }
-    })();
-    return () => {
-      c = true;
-    };
-  }, [store, attempt]);
+  const { state, loading, error, retry } = useTournamentData();
   if (loading) return <p role="status">Loading groups…</p>;
   if (error)
     return (
       <div>
         <p role="alert">{error}</p>
-        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+        <button type="button" className="btn" onClick={retry}>
           Try again
         </button>
       </div>
@@ -42,23 +16,37 @@ export function GroupsPage() {
   const groups = [...state.groups.values()];
   if (groups.length === 0) {
     return (
-      <section aria-label="Groups">
-        <h1>Groups</h1>
-        <p>No groups yet.</p>
+      <section aria-label="Groups" className="view">
+        <div className="head">
+          <div>
+            <div className="eyebrow">Gruppen</div>
+            <h1>Groups</h1>
+            <p className="muted">No groups yet.</p>
+          </div>
+        </div>
       </section>
     );
   }
   return (
-    <section aria-label="Groups">
-      <h1>Groups</h1>
-      <ul>
-        {[...state.groups.values()].map((g) => (
-          <li key={g.groupId}>
-            <Link to={`/groups/${encodeURIComponent(g.groupId)}`}>{g.name}</Link> ·{" "}
-            {[...state.teams.values()].filter((t) => t.groupId === g.groupId).length} teams
-          </li>
-        ))}
-      </ul>
+    <section aria-label="Groups" className="view">
+      <div className="head">
+        <div>
+          <div className="eyebrow">Gruppen</div>
+          <h1>Groups</h1>
+        </div>
+      </div>
+      <div className="team-list" style={{ gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))" }}>
+        {groups.map((g) => {
+          const n = [...state.teams.values()].filter((t) => t.groupId === g.groupId).length;
+          return (
+            <Link key={g.groupId} to={`/groups/${encodeURIComponent(g.groupId)}`} className="card team-card" style={{ textDecoration: "none" }}>
+              <span className="badge scheduled">Gruppe {groupNameOf(state, g.groupId)}</span>
+              <h2>{g.name}</h2>
+              <div className="muted">{n} teams</div>
+            </Link>
+          );
+        })}
+      </div>
     </section>
   );
 }
