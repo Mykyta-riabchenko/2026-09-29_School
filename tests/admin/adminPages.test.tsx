@@ -66,12 +66,12 @@ const game1 = {
 
 function mockReads(games: unknown[] = [game1]) {
   server.use(
-    http.get(`${API_BASE_URL}/api/matches`, () => HttpResponse.json({ data: games })),
+    http.get(`${API_BASE_URL}/api/games`, () => HttpResponse.json({ data: games })),
     http.get(`${API_BASE_URL}/api/teams`, () => HttpResponse.json({ data: lookups.teams })),
     http.get(`${API_BASE_URL}/api/groups`, () => HttpResponse.json({ data: lookups.groups })),
     http.get(`${API_BASE_URL}/api/rounds`, () => HttpResponse.json({ data: lookups.rounds })),
     http.get(`${API_BASE_URL}/api/fields`, () => HttpResponse.json({ data: lookups.fields })),
-    http.get(`${API_BASE_URL}/api/matches/:id`, () => HttpResponse.json({ data: game1 })),
+    http.get(`${API_BASE_URL}/api/games/:id`, () => HttpResponse.json({ data: game1 })),
   );
 }
 

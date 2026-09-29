@@ -10,8 +10,9 @@ export function GamesPage() {
   const store = useAdminStore();
   const navigate = useNavigate();
   const [actionError, setActionError] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
 
-  if (status === "loading") return <p>Loading games…</p>;
+  if (status === "loading") return <p role="status">Loading games…</p>;
   if (status === "error")
     return (
       <div>
@@ -26,34 +27,57 @@ export function GamesPage() {
 
   async function onStart(id: string) {
     setActionError(null);
+    setPendingId(id);
     try {
       const saved = await startGame(id);
       store.upsertGame(saved);
       await refresh();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Start failed.");
+    } finally {
+      setPendingId(null);
     }
   }
 
   async function onEnd(id: string) {
     setActionError(null);
+    setPendingId(id);
     try {
       const saved = await endGame(id);
       store.upsertGame(saved);
       await refresh();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "End failed.");
+    } finally {
+      setPendingId(null);
     }
   }
 
   async function onDelete(id: string) {
     if (!window.confirm("Delete this game?")) return;
+    setActionError(null);
+    setPendingId(id);
     try {
       await deleteGame(id);
       await refresh();
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Delete failed.");
+    } finally {
+      setPendingId(null);
     }
+  }
+
+  const games = [...state.games.values()];
+  if (games.length === 0) {
+    return (
+      <section aria-label="Manage games">
+        <h1>Games</h1>
+        <button type="button" onClick={() => navigate("/games/create")}>
+          Create game
+        </button>
+        <p>No games yet. Create the first game to get started.</p>
+      </section>
+    );
   }
 
   return (
@@ -64,18 +88,18 @@ export function GamesPage() {
       </button>
       {actionError ? <p role="alert">{actionError}</p> : null}
       <ul>
-        {[...state.games.values()].map((g) => (
+        {games.map((g) => (
           <li key={g.gameId}>
             {teamName(g.teamAId)} {g.scoreA}:{g.scoreB} {teamName(g.teamBId)} · {g.status} ·{" "}
             <Link to={`/games/${encodeURIComponent(g.gameId)}`}>Open</Link> ·{" "}
             <Link to={`/games/${encodeURIComponent(g.gameId)}/score`}>Score</Link> ·{" "}
-            <button type="button" onClick={() => void onStart(g.gameId)}>
-              Start
+            <button type="button" disabled={pendingId === g.gameId || g.status !== "SCHEDULED"} onClick={() => void onStart(g.gameId)}>
+              {pendingId === g.gameId ? "Working…" : "Start"}
             </button>{" "}
-            <button type="button" onClick={() => void onEnd(g.gameId)}>
-              Finish
+            <button type="button" disabled={pendingId === g.gameId || g.status !== "RUNNING"} onClick={() => void onEnd(g.gameId)}>
+              {pendingId === g.gameId ? "Working…" : "Finish"}
             </button>{" "}
-            <button type="button" onClick={() => void onDelete(g.gameId)}>
+            <button type="button" disabled={pendingId === g.gameId} onClick={() => void onDelete(g.gameId)}>
               Delete
             </button>
           </li>

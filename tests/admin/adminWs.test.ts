@@ -50,7 +50,7 @@ describe("admin WS format (admin doc §19, §32)", () => {
   it("GAME UPDATE → refresh single game via REST", async () => {
     let hits = 0;
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/:id`, () => {
+      http.get(`${API_BASE_URL}/api/games/:id`, () => {
         hits += 1;
         return HttpResponse.json({ data: game });
       }),
@@ -111,7 +111,7 @@ describe("admin WS format (admin doc §19, §32)", () => {
 
   it("raw handler accepts both formats, ignores garbage", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/:id`, () =>
+      http.get(`${API_BASE_URL}/api/games/:id`, () =>
         HttpResponse.json({ data: game }),
       ),
     );

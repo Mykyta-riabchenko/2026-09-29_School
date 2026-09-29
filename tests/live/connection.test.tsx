@@ -88,7 +88,7 @@ function mockCollections(overrides?: {
         data: overrides?.teams ?? [team1, { teamId: "t2", class: "U18", name: "Other Name", groupId: "g1" }],
       }),
     ),
-    http.get(`${API_BASE_URL}/api/matches`, () =>
+    http.get(`${API_BASE_URL}/api/games`, () =>
       HttpResponse.json({
         data: overrides?.games ?? [
           {
@@ -170,7 +170,7 @@ describe("WS connection: backend event → API fetch → silent UI update", () =
     mockCollections();
     let gameHits = 0;
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/:id`, () => {
+      http.get(`${API_BASE_URL}/api/games/:id`, () => {
         gameHits += 1;
         return HttpResponse.json({
           data: {
@@ -292,7 +292,7 @@ describe("WS connection: backend event → API fetch → silent UI update", () =
     let gamesHits = 0;
     mockCollections();
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () => {
+      http.get(`${API_BASE_URL}/api/games`, () => {
         gamesHits += 1;
         // Second and later fetches carry the new server truth.
         const score = gamesHits >= 2 ? 42 : 2;

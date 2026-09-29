@@ -9,4 +9,4 @@
 // while the public app runs on https://tournament.example.com; both read
 // the backend address from this module only.
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000";

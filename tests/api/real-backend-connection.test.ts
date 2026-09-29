@@ -20,7 +20,7 @@ const describeLive = process.env.RUN_BACKEND_TESTS ? describe : describe.skip;
 describe("real backend connection", () => {
   it("API_BASE_URL defaults to the local backend", () => {
     expect(API_BASE_URL).toBe(
-      process.env.VITE_API_BASE_URL ?? "http://localhost:8080",
+      process.env.VITE_API_BASE_URL ?? "http://localhost:4000",
     );
   });
 });

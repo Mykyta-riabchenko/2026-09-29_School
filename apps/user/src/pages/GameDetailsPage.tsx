@@ -11,15 +11,22 @@ export function GameDetailsPage() {
   const state = useTournamentState();
   const [game, setGame] = useState<Game | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    if (!id) return;
-    const decoded = decodeURIComponent(id);
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+    // useParams already decodes; keep raw id to avoid double-decode errors on `%`.
+    const lookupId = id;
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const [g, teams, fields, rounds, groups] = await Promise.all([
-          getGameById(decoded),
+          getGameById(lookupId),
           getTeams(),
           getFields(),
           getRounds(),
@@ -32,25 +39,44 @@ export function GameDetailsPage() {
         store.setRounds(rounds);
         store.setGroups(groups);
         store.upsertGame(g);
+        setError(null);
       } catch (e) {
         if (!cancelled) {
-          const cached = store.getSnapshot().games.get(decoded) ?? null;
-          if (cached) setGame(cached);
-          else setError(e instanceof Error ? e.message : "Failed.");
+          const cached = store.getSnapshot().games.get(lookupId) ?? null;
+          if (cached) {
+            setGame(cached);
+            setError(null);
+          } else setError(e instanceof Error ? e.message : "Failed.");
         }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [id, store]);
+  }, [id, store, attempt]);
 
   const live = game ? (state.games.get(game.gameId) ?? game) : null;
-  if (error) return <p role="alert">{error}</p>;
-  if (!live) return <p>Loading game…</p>;
+  if (loading) return <p role="status">Loading game…</p>;
+  if (error)
+    return (
+      <div>
+        <p role="alert">{error}</p>
+        <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+          Try again
+        </button>
+        <p>
+          <Link to="/games">Back to games</Link>
+        </p>
+      </div>
+    );
+  if (!live) return <p role="status">Loading game…</p>;
   return (
     <section aria-label="Game details">
-      <Link to="/games">Back to games</Link>
+      <Link to="/games" aria-label="Back to games">
+        Back to games
+      </Link>
       <h1>
         {state.teams.get(live.teamAId)?.name ?? live.teamAId} vs {state.teams.get(live.teamBId)?.name ?? live.teamBId}
       </h1>

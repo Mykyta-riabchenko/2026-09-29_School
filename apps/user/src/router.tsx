@@ -22,7 +22,20 @@ export function UserRoutes() {
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/teams/:id" element={<TeamDetailsPage />} />
       <Route path="/leaderboard" element={<LeaderboardPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+  );
+}
+
+export function NotFoundPage() {
+  return (
+    <section aria-label="Not found">
+      <h1>Page not found</h1>
+      <p>The page you requested does not exist.</p>
+      <p>
+        <a href="/">Back to home</a>
+      </p>
+    </section>
   );
 }
 
@@ -37,7 +50,7 @@ const ENTRIES = [
 
 export function UserNav() {
   return (
-    <nav aria-label="Public">
+    <nav aria-label="Primary" className="app-nav">
       {ENTRIES.map((e) => (
         <NavLink key={e.to} to={e.to}>
           {e.label}

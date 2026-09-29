@@ -32,7 +32,7 @@ describe("integration: reconnect consistency refetch", () => {
 
     // Server now has the newer score (event missed while offline).
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({
           data: [
             {
@@ -58,7 +58,7 @@ describe("integration: reconnect consistency refetch", () => {
 
   it("round filter + lookups resolve display names", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/filter/:filter`, () =>
+      http.get(`${API_BASE_URL}/api/games/filter/:filter`, () =>
         HttpResponse.json({
           data: [
             {

@@ -15,10 +15,12 @@ export function LandingPage() {
   const live = useLiveStatus();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      setLoading(true);
       try {
         const [games, teams, fields, rounds, groups] = await Promise.all([
           getGames(),
@@ -43,7 +45,7 @@ export function LandingPage() {
     return () => {
       cancelled = true;
     };
-  }, [store]);
+  }, [store, attempt]);
 
   const games = [...state.games.values()];
   const rounds = sortRoundsByNumber([...state.rounds.values()]);
@@ -72,9 +74,26 @@ export function LandingPage() {
   return (
     <section aria-label="Tournament landing">
       <h1>Tournament</h1>
-      <p>Live tournament overview. Live: {live.status}</p>
-      {loading ? <p>Loading tournament…</p> : null}
-      {error ? <p role="alert">{error}</p> : null}
+      <p className="live-banner" aria-live="polite">
+        <span className={live.status === "connected" ? "live-dot" : "live-dot live-dot--bad"} aria-hidden="true" />
+        Live tournament overview. Live: {live.status}{" "}
+        {live.status === "failed" || live.status === "disconnected" ? (
+          <button type="button" onClick={live.retry}>
+            Reconnect
+          </button>
+        ) : null}
+      </p>
+      {loading ? (
+        <p role="status">Loading tournament…</p>
+      ) : null}
+      {error ? (
+        <div>
+          <p role="alert">{error}</p>
+          <button type="button" onClick={() => setAttempt((a) => a + 1)}>
+            Try again
+          </button>
+        </div>
+      ) : null}
       <h2>Current round</h2>
       <p>{currentRound ? `Round ${currentRound.number}` : "No rounds yet"}</p>
       <h2>Live games</h2>
@@ -92,28 +111,40 @@ export function LandingPage() {
         </ul>
       )}
       <h2>Fields</h2>
-      <ul>
-        {[...state.fields.values()].map((f) => (
-          <li key={f.fieldId}>{f.name}</li>
-        ))}
-      </ul>
+      {[...state.fields.values()].length === 0 ? (
+        <p>No fields yet.</p>
+      ) : (
+        <ul>
+          {[...state.fields.values()].map((f) => (
+            <li key={f.fieldId}>{f.name}</li>
+          ))}
+        </ul>
+      )}
       <h2>Groups</h2>
-      <ul>
-        {[...state.groups.values()].map((g) => (
-          <li key={g.groupId}>
-            <Link to={`/groups/${encodeURIComponent(g.groupId)}`}>{g.name}</Link>
-          </li>
-        ))}
-      </ul>
+      {[...state.groups.values()].length === 0 ? (
+        <p>No groups yet.</p>
+      ) : (
+        <ul>
+          {[...state.groups.values()].map((g) => (
+            <li key={g.groupId}>
+              <Link to={`/groups/${encodeURIComponent(g.groupId)}`}>{g.name}</Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <h2>Leaderboard</h2>
-      <ul>
-        {leaderboard.map(({ team, wins, played }) => (
-          <li key={team.teamId}>
-            <Link to={`/teams/${encodeURIComponent(team.teamId)}`}>{team.name}</Link> · {wins} wins / {played} played
-          </li>
-        ))}
-      </ul>
-      <nav aria-label="Public">
+      {leaderboard.length === 0 ? (
+        <p>No leaderboard entries yet.</p>
+      ) : (
+        <ul>
+          {leaderboard.map(({ team, wins, played }) => (
+            <li key={team.teamId}>
+              <Link to={`/teams/${encodeURIComponent(team.teamId)}`}>{team.name}</Link> · {wins} wins / {played} played
+            </li>
+          ))}
+        </ul>
+      )}
+      <nav aria-label="Footer">
         <Link to="/games">Games</Link> | <Link to="/fields">Fields</Link> |{" "}
         <Link to="/groups">Groups</Link> | <Link to="/teams">Teams</Link> |{" "}
         <Link to="/leaderboard">Leaderboard</Link>

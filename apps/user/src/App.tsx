@@ -9,13 +9,21 @@ export function UserApp() {
     <BrowserRouter>
       <TournamentProvider>
         <LiveProvider>
-          <header>
-            <p>Tournament – Public</p>
+          <a className="skip-link" href="#main-content">
+            Skip to content
+          </a>
+          <header className="app-header">
+            <p className="app-header__brand">
+              <a href="/">Tournament – Public</a>
+            </p>
             <UserNav />
           </header>
-          <main>
+          <main className="app-main" id="main-content">
             <UserRoutes />
           </main>
+          <footer className="app-footer">
+            <span>Tournament – public results. Live updates when connected.</span>
+          </footer>
         </LiveProvider>
       </TournamentProvider>
     </BrowserRouter>

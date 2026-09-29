@@ -87,11 +87,11 @@ export function getFieldById(id: Id): Promise<Field> {
   return getSingle(`/api/fields/${encodeURIComponent(id)}`, mapFieldResponse);
 }
 export function getGames(): Promise<Game[]> {
-  return getCollection("/api/matches", mapGameResponse);
+  return getCollection("/api/games", mapGameResponse);
 }
 export function getGameById(id: Id): Promise<Game> {
-  return getSingle(`/api/matches/${encodeURIComponent(id)}`, mapGameResponse);
+  return getSingle(`/api/games/${encodeURIComponent(id)}`, mapGameResponse);
 }
 export function getGamesByFilter(filter: string): Promise<Game[]> {
-  return getCollection(`/api/matches/filter/${encodeURIComponent(filter)}`, mapGameResponse);
+  return getCollection(`/api/games/filter/${encodeURIComponent(filter)}`, mapGameResponse);
 }

@@ -8,13 +8,21 @@ export function AdminApp() {
   return (
     <BrowserRouter>
       <AdminProvider>
-        <header>
-          <p>Tournament – Admin</p>
+        <a className="skip-link" href="#main-content">
+          Skip to content
+        </a>
+        <header className="app-header">
+          <p className="app-header__brand">
+            <a href="/">Tournament – Admin</a>
+          </p>
           <AdminNav />
         </header>
-        <main>
+        <main className="app-main" id="main-content">
           <AdminRoutes />
         </main>
+        <footer className="app-footer">
+          <span>Tournament administration. Changes take effect immediately.</span>
+        </footer>
       </AdminProvider>
     </BrowserRouter>
   );

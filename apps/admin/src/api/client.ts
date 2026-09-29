@@ -87,12 +87,12 @@ export async function getFields(): Promise<Field[]> {
   return data.map(mapFieldResponse);
 }
 export async function getGames(): Promise<Game[]> {
-  const data = await getData("/api/matches");
+  const data = await getData("/api/games");
   if (!Array.isArray(data)) throw new AdminApiError(500, "INVALID_RESPONSE", "Expected array");
   return data.map(mapGameResponse);
 }
 export async function getGameById(id: Id): Promise<Game> {
-  const data = await getData(`/api/matches/${encodeURIComponent(id)}`);
+  const data = await getData(`/api/games/${encodeURIComponent(id)}`);
   return mapGameResponse(data);
 }
 

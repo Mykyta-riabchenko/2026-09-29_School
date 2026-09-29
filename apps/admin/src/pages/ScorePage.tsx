@@ -10,9 +10,9 @@ import { useAdminState, useAdminStore } from "../state/store";
 // disabled controls after finish, explicit Finish Game confirmation.
 // Status is read from backend `status`; FINISHED disables editing.
 export function ScorePage() {
-  const { status } = useAdminData();
+  const { status, error, retry } = useAdminData();
   const { id } = useParams<{ id: string }>();
-  const gameId = id ? decodeURIComponent(id) : "";
+  const gameId = id ?? "";
   const state = useAdminState();
   const store = useAdminStore();
   const queue = useScoreQueue(gameId);
@@ -22,9 +22,22 @@ export function ScorePage() {
 
   const game = gameId ? (state.games.get(gameId) ?? null) : null;
   const finished = game?.status === "FINISHED";
+  const busy = queue.saving || queue.pendingCount > 0 || finishing;
 
-  if (status === "loading" && !game) return <p>Loading game…</p>;
-  if (!game) return <p>Game not found.</p>;
+  if (status === "loading" && !game) return <p role="status">Loading game…</p>;
+  if (status === "error" && !game)
+    return (
+      <div>
+        <p role="alert">{error ?? "Could not load game."}</p>
+        <button type="button" onClick={retry}>
+          Retry
+        </button>
+        <p>
+          <Link to="/games">Back to games</Link>
+        </p>
+      </div>
+    );
+  if (!game) return <p role="alert">Game not found.</p>;
 
   async function confirmFinish() {
     const current = gameId ? (state.games.get(gameId) ?? null) : null;
@@ -47,7 +60,9 @@ export function ScorePage() {
 
   return (
     <section aria-label="Score">
-      <Link to="/games">Back</Link>
+      <Link to="/games" aria-label="Back to games">
+        Back
+      </Link>
       <h1>
         {teamA} vs {teamB}
       </h1>
@@ -55,20 +70,26 @@ export function ScorePage() {
         {queue.scoreA} : {queue.scoreB} · {game.status}
       </p>
       <div>
-        <button type="button" aria-label="Decrement Team A" disabled={finished} onClick={queue.decrementA}>
+        <button type="button" aria-label="Decrement Team A" disabled={finished || busy} onClick={queue.decrementA}>
           -A
         </button>{" "}
-        <button type="button" aria-label="Increment Team A" disabled={finished} onClick={queue.incrementA}>
+        <button type="button" aria-label="Increment Team A" disabled={finished || busy} onClick={queue.incrementA}>
           +A
         </button>{" "}
-        <button type="button" aria-label="Decrement Team B" disabled={finished} onClick={queue.decrementB}>
+        <button type="button" aria-label="Decrement Team B" disabled={finished || busy} onClick={queue.decrementB}>
           -B
         </button>{" "}
-        <button type="button" aria-label="Increment Team B" disabled={finished} onClick={queue.incrementB}>
+        <button type="button" aria-label="Increment Team B" disabled={finished || busy} onClick={queue.incrementB}>
           +B
         </button>
       </div>
-      {finished ? <p>Final score. Score controls are disabled.</p> : <button type="button" onClick={() => setConfirming(true)}>Finish Game</button>}
+      {finished ? (
+        <p>Final score. Score controls are disabled.</p>
+      ) : (
+        <button type="button" disabled={confirming || finishing} onClick={() => setConfirming(true)}>
+          Finish Game
+        </button>
+      )}
       {queue.pendingCount > 0 || queue.saving ? <p role="status">Saving… {queue.pendingCount} pending</p> : null}
       {queue.error ? (
         <div role="alert">
@@ -84,7 +105,7 @@ export function ScorePage() {
         </div>
       ) : null}
       {confirming ? (
-        <div role="dialog" aria-label="Finish this game?">
+        <div role="dialog" aria-label="Finish this game?" aria-modal="true">
           <p>
             Finish this game? {teamA} {queue.scoreA} : {queue.scoreB} {teamB}
             {finishError ? ` ${finishError}` : ""}

@@ -18,10 +18,36 @@ import {
   fields,
   games,
   findById,
+  saveDb,
+  normalizeGameStatus,
+  getDataFilePath,
 } from "./data/store.js";
 import { attachWebSocket, broadcastAdmin, handleDevCommand } from "./websocket.js";
 
 const PORT = Number(process.env.TEST_SERVER_PORT ?? 4000);
+const PORTS = (process.env.TEST_SERVER_PORTS ?? String(PORT))
+  .split(",")
+  .map((s) => Number(s.trim()))
+  .filter((n) => Number.isInteger(n) && n > 0);
+const LISTEN_PORTS = PORTS.length > 0 ? [...new Set(PORTS)] : [PORT];
+
+function toGameWire(g: (typeof games)[number]) {
+  return {
+    gameId: String(g.gameId),
+    roundId: String(g.roundId),
+    fieldId: String(g.fieldId),
+    teamAId: String(g.teamAId),
+    teamBId: String(g.teamBId),
+    refereeTeamId: String(g.refereeTeamId),
+    scoreA: g.scoreA,
+    scoreB: g.scoreB,
+    status: normalizeGameStatus(g.status),
+  };
+}
+
+function toTeamWire(t: (typeof teams)[number]) {
+  return { teamId: String(t.teamId), class: t.class, name: t.name, groupId: String(t.groupId) };
+}
 
 function json(res: ServerResponse, status: number, body: unknown) {
   const payload = JSON.stringify(body);
@@ -127,7 +153,7 @@ async function teacherRouter(
       ["CREATE", "UPDATE", "DELETE"].includes(operation) &&
       (typeof entityId === "string" || typeof entityId === "number")
     ) {
-      broadcastAdmin(
+      saveDb(); broadcastAdmin(
         entity as "GAME",
         operation as "UPDATE",
         entityId,
@@ -156,7 +182,7 @@ async function teacherRouter(
     }
     const row = { groupId: `g_new_${teacherSeq++}`, name };
     groups.push(row);
-    broadcastAdmin("GROUP", "CREATE", row.groupId);
+    saveDb(); broadcastAdmin("GROUP", "CREATE", row.groupId);
     return json(res, 201, { data: row }), true;
   }
   const groupIdMatch = path.match(/^\/api\/teacher\/groups\/(.+)$/);
@@ -170,7 +196,7 @@ async function teacherRouter(
         return conflict(res, "Group already exists"), true;
       }
       row.name = name;
-      broadcastAdmin("GROUP", "UPDATE", row.groupId);
+      saveDb(); broadcastAdmin("GROUP", "UPDATE", row.groupId);
       return json(res, 200, { data: row }), true;
     }
     if (req.method === "DELETE") {
@@ -178,7 +204,7 @@ async function teacherRouter(
         return conflict(res, "Group still has teams"), true;
       }
       groups.splice(groups.indexOf(row), 1);
-      broadcastAdmin("GROUP", "DELETE", row.groupId);
+      saveDb(); broadcastAdmin("GROUP", "DELETE", row.groupId);
       res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
       res.end();
       return true;
@@ -197,7 +223,7 @@ async function teacherRouter(
     }
     const row = { teamId: `team_new_${teacherSeq++}`, class: klass, name, groupId };
     teams.push(row);
-    broadcastAdmin("TEAM", "CREATE", row.teamId);
+    saveDb(); broadcastAdmin("TEAM", "CREATE", row.teamId);
     return json(res, 201, { data: row }), true;
   }
   const teamIdMatch = path.match(/^\/api\/teacher\/teams\/(.+)$/);
@@ -215,7 +241,7 @@ async function teacherRouter(
       row.name = name;
       row.class = klass;
       row.groupId = groupId;
-      broadcastAdmin("TEAM", "UPDATE", row.teamId);
+      saveDb(); broadcastAdmin("TEAM", "UPDATE", row.teamId);
       return json(res, 200, { data: row }), true;
     }
     if (req.method === "DELETE") {
@@ -230,7 +256,7 @@ async function teacherRouter(
         return conflict(res, "Team is referenced by a game"), true;
       }
       teams.splice(teams.indexOf(row), 1);
-      broadcastAdmin("TEAM", "DELETE", row.teamId);
+      saveDb(); broadcastAdmin("TEAM", "DELETE", row.teamId);
       res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
       res.end();
       return true;
@@ -249,7 +275,7 @@ async function teacherRouter(
     }
     const row = { roundId: `round_new_${teacherSeq++}`, number: number as number };
     rounds.push(row);
-    broadcastAdmin("ROUND", "CREATE", row.roundId);
+    saveDb(); broadcastAdmin("ROUND", "CREATE", row.roundId);
     return json(res, 201, { data: row }), true;
   }
   const roundIdMatch = path.match(/^\/api\/teacher\/rounds\/(.+)$/);
@@ -265,7 +291,7 @@ async function teacherRouter(
         return conflict(res, "Round already exists"), true;
       }
       row.number = number as number;
-      broadcastAdmin("ROUND", "UPDATE", row.roundId);
+      saveDb(); broadcastAdmin("ROUND", "UPDATE", row.roundId);
       return json(res, 200, { data: row }), true;
     }
     if (req.method === "DELETE") {
@@ -273,7 +299,7 @@ async function teacherRouter(
         return conflict(res, "Round still has games"), true;
       }
       rounds.splice(rounds.indexOf(row), 1);
-      broadcastAdmin("ROUND", "DELETE", row.roundId);
+      saveDb(); broadcastAdmin("ROUND", "DELETE", row.roundId);
       res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
       res.end();
       return true;
@@ -290,7 +316,7 @@ async function teacherRouter(
     }
     const row = { fieldId: `field_new_${teacherSeq++}`, name };
     fields.push(row);
-    broadcastAdmin("FIELD", "CREATE", row.fieldId);
+    saveDb(); broadcastAdmin("FIELD", "CREATE", row.fieldId);
     return json(res, 201, { data: row }), true;
   }
   const fieldIdMatch = path.match(/^\/api\/teacher\/fields\/(.+)$/);
@@ -304,7 +330,7 @@ async function teacherRouter(
         return conflict(res, "Field already exists"), true;
       }
       row.name = name;
-      broadcastAdmin("FIELD", "UPDATE", row.fieldId);
+      saveDb(); broadcastAdmin("FIELD", "UPDATE", row.fieldId);
       return json(res, 200, { data: row }), true;
     }
     if (req.method === "DELETE") {
@@ -312,7 +338,7 @@ async function teacherRouter(
         return conflict(res, "Field still has games"), true;
       }
       fields.splice(fields.indexOf(row), 1);
-      broadcastAdmin("FIELD", "DELETE", row.fieldId);
+      saveDb(); broadcastAdmin("FIELD", "DELETE", row.fieldId);
       res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
       res.end();
       return true;
@@ -366,7 +392,7 @@ async function teacherRouter(
     if (!checked.ok) return badRequest(res, "Invalid game"), true;
     const row = { gameId: `game_new_${teacherSeq++}`, ...checked.value };
     games.push(row as (typeof games)[number]);
-    broadcastAdmin("GAME", "CREATE", row.gameId);
+    saveDb(); broadcastAdmin("GAME", "CREATE", row.gameId);
     return json(res, 201, { data: row }), true;
   }
   const gameIdMatch = path.match(/^\/api\/teacher\/games\/([^/]+)$/);
@@ -377,12 +403,12 @@ async function teacherRouter(
       const checked = checkGameBody();
       if (!checked.ok) return badRequest(res, "Invalid game"), true;
       Object.assign(row, checked.value);
-      broadcastAdmin("GAME", "UPDATE", row.gameId);
+      saveDb(); broadcastAdmin("GAME", "UPDATE", row.gameId);
       return json(res, 200, { data: row }), true;
     }
     if (req.method === "DELETE") {
       games.splice(games.indexOf(row), 1);
-      broadcastAdmin("GAME", "DELETE", row.gameId);
+      saveDb(); broadcastAdmin("GAME", "DELETE", row.gameId);
       res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
       res.end();
       return true;
@@ -401,11 +427,260 @@ async function teacherRouter(
     if (!row) return notFound(res, "Game not found"), true;
     (row as { status?: string }).status =
       lifecycleMatch[2] === "start" ? "LIVE" : "COMPLETED";
-    broadcastAdmin("GAME", "UPDATE", row.gameId);
+    saveDb(); broadcastAdmin("GAME", "UPDATE", row.gameId);
     return json(res, 200, { data: row }), true;
   }
 
   return notFound(res, "Unknown teacher endpoint"), true;
+}
+
+async function adminRouter(
+  req: IncomingMessage,
+  res: ServerResponse,
+  url: URL,
+  path: string,
+): Promise<boolean> {
+  const body = (await readBody(req)) as Record<string, unknown>;
+  if (body === null) return badRequest(res, "Malformed JSON"), true;
+
+  const str = (v: unknown) => String(v ?? "").trim();
+
+  // ---- Groups ----
+  if (path === "/api/admin/groups" && req.method === "POST") {
+    const name = str(body.name);
+    if (!name) return badRequest(res, "Name is required"), true;
+    if (groups.some((g) => g.name === name)) return conflict(res, "Group already exists"), true;
+    const row = { groupId: `g_${Date.now()}_${Math.floor(Math.random() * 1000)}`, name };
+    groups.push(row);
+    saveDb(); broadcastAdmin("GROUP", "CREATE", row.groupId);
+    return json(res, 201, { data: row }), true;
+  }
+  const adminGroupMatch = path.match(/^\/api\/admin\/groups\/(.+)$/);
+  if (adminGroupMatch) {
+    const row = findById(groups, "groupId", decodeURIComponent(adminGroupMatch[1]));
+    if (!row) return notFound(res, "Group not found"), true;
+    if (req.method === "PUT") {
+      const name = str(body.name);
+      if (!name) return badRequest(res, "Name is required"), true;
+      if (groups.some((g) => g !== row && g.name === name)) return conflict(res, "Group already exists"), true;
+      row.name = name;
+      saveDb(); broadcastAdmin("GROUP", "UPDATE", row.groupId);
+      return json(res, 200, { data: row }), true;
+    }
+    if (req.method === "DELETE") {
+      if (teams.some((t) => String(t.groupId) === String(row.groupId))) return conflict(res, "Group still has teams"), true;
+      groups.splice(groups.indexOf(row), 1);
+      saveDb(); broadcastAdmin("GROUP", "DELETE", row.groupId);
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.end();
+      return true;
+    }
+    return false;
+  }
+
+  // ---- Teams (admin client sends numeric groupId; accept number or string, store string) ----
+  if (path === "/api/admin/teams" && req.method === "POST") {
+    const name = str(body.name);
+    const klass = str((body as Record<string, unknown>).class);
+    const groupId = str(body.groupId);
+    if (!name || !klass) return badRequest(res, "Class and name are required"), true;
+    if (!groupId || !findById(groups, "groupId", groupId)) return badRequest(res, "Unknown group"), true;
+    const row = { teamId: `team_${Date.now()}_${Math.floor(Math.random() * 1000)}`, class: klass, name, groupId };
+    teams.push(row);
+    saveDb(); broadcastAdmin("TEAM", "CREATE", row.teamId);
+    return json(res, 201, { data: toTeamWire(row) }), true;
+  }
+  const adminTeamMatch = path.match(/^\/api\/admin\/teams\/(.+)$/);
+  if (adminTeamMatch) {
+    const row = findById(teams, "teamId", decodeURIComponent(adminTeamMatch[1]));
+    if (!row) return notFound(res, "Team not found"), true;
+    if (req.method === "PUT") {
+      const name = str(body.name);
+      const klass = str((body as Record<string, unknown>).class);
+      const groupId = str(body.groupId);
+      if (!name || !klass) return badRequest(res, "Class and name are required"), true;
+      if (!groupId || !findById(groups, "groupId", groupId)) return badRequest(res, "Unknown group"), true;
+      row.name = name;
+      row.class = klass;
+      row.groupId = groupId;
+      saveDb(); broadcastAdmin("TEAM", "UPDATE", row.teamId);
+      return json(res, 200, { data: toTeamWire(row) }), true;
+    }
+    if (req.method === "DELETE") {
+      if (games.some((g) => g.teamAId === row.teamId || g.teamBId === row.teamId || g.refereeTeamId === row.teamId))
+        return conflict(res, "Team is referenced by a game"), true;
+      teams.splice(teams.indexOf(row), 1);
+      saveDb(); broadcastAdmin("TEAM", "DELETE", row.teamId);
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.end();
+      return true;
+    }
+    return false;
+  }
+
+  // ---- Rounds ----
+  if (path === "/api/admin/rounds" && req.method === "POST") {
+    const number = body.number;
+    if (!Number.isInteger(number) || (number as number) <= 0) return badRequest(res, "Number must be a positive integer"), true;
+    if (rounds.some((r) => r.number === number)) return conflict(res, "Round already exists"), true;
+    const row = { roundId: `round_${Date.now()}_${Math.floor(Math.random() * 1000)}`, number: number as number };
+    rounds.push(row);
+    saveDb(); broadcastAdmin("ROUND", "CREATE", row.roundId);
+    return json(res, 201, { data: row }), true;
+  }
+  const genMatch = path.match(/^\/api\/admin\/rounds\/(.+)\/generate-games\/(round-robin|knockout|consolation)$/);
+  if (genMatch && req.method === "POST") {
+    const roundRow = findById(rounds, "roundId", decodeURIComponent(genMatch[1]));
+    if (!roundRow) return notFound(res, "Round not found"), true;
+    const kind = genMatch[2];
+    const allTeams = [...teams];
+    const allFields = [...fields];
+    if (allTeams.length < 2) return badRequest(res, "Need at least 2 teams to generate games"), true;
+    if (allFields.length === 0) return badRequest(res, "Need at least 1 field to generate games"), true;
+    const created: ReturnType<typeof toGameWire>[] = [];
+    const pairs: [string, string][] = [];
+    if (kind === "round-robin") {
+      for (let i = 0; i < allTeams.length; i++) {
+        for (let j = i + 1; j < allTeams.length; j++) {
+          pairs.push([allTeams[i].teamId, allTeams[j].teamId]);
+        }
+      }
+    } else {
+      // knockout / consolation: pair sequentially (0v1, 2v3, ...)
+      for (let i = 0; i + 1 < allTeams.length; i += 2) {
+        pairs.push([allTeams[i].teamId, allTeams[i + 1].teamId]);
+      }
+      if (pairs.length === 0) pairs.push([allTeams[0].teamId, allTeams[1].teamId]);
+    }
+    pairs.slice(0, 20).forEach(([a, b], idx) => {
+      const ref = allTeams[(idx + 2) % allTeams.length];
+      const referee = ref.teamId === a || ref.teamId === b ? allTeams[(idx + 3) % allTeams.length].teamId : ref.teamId;
+      const row = {
+        gameId: `game_${Date.now()}_${idx}_${Math.floor(Math.random() * 10000)}`,
+        roundId: String(roundRow.roundId),
+        fieldId: String(allFields[idx % allFields.length].fieldId),
+        teamAId: String(a),
+        teamBId: String(b),
+        refereeTeamId: String(referee),
+        scoreA: 0,
+        scoreB: 0,
+        status: "SCHEDULED" as const,
+      };
+      games.push(row);
+      created.push(toGameWire(row));
+    });
+    saveDb(); broadcastAdmin("GAME", "CREATE", roundRow.roundId);
+    return json(res, 201, { data: created }), true;
+  }
+  const adminRoundMatch = path.match(/^\/api\/admin\/rounds\/(.+)$/);
+  if (adminRoundMatch && !path.includes("/generate-games/")) {
+    const row = findById(rounds, "roundId", decodeURIComponent(adminRoundMatch[1]));
+    if (!row) return notFound(res, "Round not found"), true;
+    if (req.method === "PUT") {
+      const number = body.number;
+      if (!Number.isInteger(number) || (number as number) <= 0) return badRequest(res, "Number must be a positive integer"), true;
+      if (rounds.some((r) => r !== row && r.number === number)) return conflict(res, "Round already exists"), true;
+      row.number = number as number;
+      saveDb(); broadcastAdmin("ROUND", "UPDATE", row.roundId);
+      return json(res, 200, { data: row }), true;
+    }
+    if (req.method === "DELETE") {
+      if (games.some((g) => String(g.roundId) === String(row.roundId))) return conflict(res, "Round still has games"), true;
+      rounds.splice(rounds.indexOf(row), 1);
+      saveDb(); broadcastAdmin("ROUND", "DELETE", row.roundId);
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.end();
+      return true;
+    }
+    return false;
+  }
+
+  // ---- Fields ----
+  if (path === "/api/admin/fields" && req.method === "POST") {
+    const name = str(body.name);
+    if (!name) return badRequest(res, "Name is required"), true;
+    if (fields.some((f) => f.name === name)) return conflict(res, "Field already exists"), true;
+    const row = { fieldId: `field_${Date.now()}_${Math.floor(Math.random() * 1000)}`, name };
+    fields.push(row);
+    saveDb(); broadcastAdmin("FIELD", "CREATE", row.fieldId);
+    return json(res, 201, { data: row }), true;
+  }
+  const adminFieldMatch = path.match(/^\/api\/admin\/fields\/(.+)$/);
+  if (adminFieldMatch) {
+    const row = findById(fields, "fieldId", decodeURIComponent(adminFieldMatch[1]));
+    if (!row) return notFound(res, "Field not found"), true;
+    if (req.method === "PUT") {
+      const name = str(body.name);
+      if (!name) return badRequest(res, "Name is required"), true;
+      if (fields.some((f) => f !== row && f.name === name)) return conflict(res, "Field already exists"), true;
+      row.name = name;
+      saveDb(); broadcastAdmin("FIELD", "UPDATE", row.fieldId);
+      return json(res, 200, { data: row }), true;
+    }
+    if (req.method === "DELETE") {
+      if (games.some((g) => String(g.fieldId) === String(row.fieldId))) return conflict(res, "Field still has games"), true;
+      fields.splice(fields.indexOf(row), 1);
+      saveDb(); broadcastAdmin("FIELD", "DELETE", row.fieldId);
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.end();
+      return true;
+    }
+    return false;
+  }
+
+  // ---- Games (full-object writes; admin client sends numeric ids, accept both) ----
+  const checkGameBody = (): { ok: true; value: Record<string, string | number> } | { ok: false } => {
+    const roundId = str(body.roundId);
+    const fieldId = str(body.fieldId);
+    const teamAId = str(body.teamAId);
+    const teamBId = str(body.teamBId);
+    const refereeTeamId = str(body.refereeTeamId);
+    const scoreA = body.scoreA;
+    const scoreB = body.scoreB;
+    if (!roundId || !fieldId || !teamAId || !teamBId || !refereeTeamId) return { ok: false };
+    if (teamAId === teamBId || refereeTeamId === teamAId || refereeTeamId === teamBId) return { ok: false };
+    if (!Number.isInteger(scoreA) || (scoreA as number) < 0 || !Number.isInteger(scoreB) || (scoreB as number) < 0)
+      return { ok: false };
+    if (
+      !findById(rounds, "roundId", roundId) ||
+      !findById(fields, "fieldId", fieldId) ||
+      !findById(teams, "teamId", teamAId) ||
+      !findById(teams, "teamId", teamBId) ||
+      !findById(teams, "teamId", refereeTeamId)
+    )
+      return { ok: false };
+    return { ok: true, value: { roundId, fieldId, teamAId, teamBId, refereeTeamId, scoreA: scoreA as number, scoreB: scoreB as number } };
+  };
+  if (path === "/api/admin/games" && req.method === "POST") {
+    const checked = checkGameBody();
+    if (!checked.ok) return badRequest(res, "Invalid game"), true;
+    const row = { gameId: `game_${Date.now()}_${Math.floor(Math.random() * 10000)}`, ...checked.value, status: "SCHEDULED" as const };
+    games.push(row as (typeof games)[number]);
+    saveDb(); broadcastAdmin("GAME", "CREATE", row.gameId);
+    return json(res, 201, { data: toGameWire(row as (typeof games)[number]) }), true;
+  }
+  const adminGameMatch = path.match(/^\/api\/admin\/games\/([^/]+)$/);
+  if (adminGameMatch) {
+    const row = findById(games, "gameId", decodeURIComponent(adminGameMatch[1]));
+    if (!row) return notFound(res, "Game not found"), true;
+    if (req.method === "PUT") {
+      const checked = checkGameBody();
+      if (!checked.ok) return badRequest(res, "Invalid game"), true;
+      Object.assign(row, checked.value);
+      saveDb(); broadcastAdmin("GAME", "UPDATE", row.gameId);
+      return json(res, 200, { data: toGameWire(row) }), true;
+    }
+    if (req.method === "DELETE") {
+      games.splice(games.indexOf(row), 1);
+      saveDb(); broadcastAdmin("GAME", "DELETE", row.gameId);
+      res.writeHead(204, { "Access-Control-Allow-Origin": "*" });
+      res.end();
+      return true;
+    }
+    return false;
+  }
+
+  return false;
 }
 
 function router(req: IncomingMessage, res: ServerResponse) {
@@ -447,16 +722,24 @@ function router(req: IncomingMessage, res: ServerResponse) {
     return json(res, 200, { data: row });
   }
 
-  // Matches (= games). Real backend uses /api/games;
-  // keep /api/matches as an alias for backwards compatibility.
-  if (
-    (path === "/api/matches" || path === "/api/games") &&
-    req.method === "GET"
-  ) {
+  const matchesList = () => games.map(toGameWire);
+
+  // Matches (new frontend contract) + legacy games alias. Always include status.
+  if ((path === "/api/matches" || path === "/api/games") && req.method === "GET") {
     if (url.searchParams.get("empty") === "1") return json(res, 200, { data: [] });
-    return json(res, 200, { data: games });
+    return json(res, 200, { data: matchesList() });
   }
-  const filterMatch = path.match(/^\/api\/(?:matches|games)\/filter\/(.+)$/);
+  const matchesFilterMatch = path.match(/^\/api\/matches\/filter\/(.+)$/);
+  if (matchesFilterMatch && req.method === "GET") {
+    const filter = decodeURIComponent(matchesFilterMatch[1]);
+    if (filter === "invalid") {
+      return json(res, 400, {
+        error: { code: "BAD_REQUEST", message: "Invalid filter", details: {} },
+      });
+    }
+    return json(res, 200, { data: matchesList().filter((g) => g.roundId === filter) });
+  }
+  const filterMatch = path.match(/^\/api\/games\/filter\/(.+)$/);
   if (filterMatch && req.method === "GET") {
     const filter = decodeURIComponent(filterMatch[1]);
     // Until backend syntax is fixed the test server treats the
@@ -467,37 +750,70 @@ function router(req: IncomingMessage, res: ServerResponse) {
       });
     }
     return json(res, 200, {
-      data: games.filter((g) => g.roundId === filter),
+      data: matchesList().filter((g) => g.roundId === filter),
     });
   }
-  const matchMatch = path.match(/^\/api\/(?:matches|games)\/(.+)$/);
-  if (matchMatch && req.method === "GET") {
-    const row = findById(games, "gameId", decodeURIComponent(matchMatch[1]));
+  // Lifecycle: SCHEDULED --start--> RUNNING --end--> FINISHED (new contract).
+  const lifecycleNewMatch = path.match(/^\/(api\/games|api\/matches)\/(.+)\/(start|end)$/);
+  if (lifecycleNewMatch && req.method === "POST") {
+    const row = findById(games, "gameId", decodeURIComponent(lifecycleNewMatch[2]));
     if (!row) return notFound(res, "Game not found");
-    return json(res, 200, { data: row });
+    row.status = lifecycleNewMatch[3] === "start" ? "RUNNING" : "FINISHED";
+    saveDb(); broadcastAdmin("GAME", "UPDATE", row.gameId);
+    return json(res, 200, { data: toGameWire(row) });
+  }
+  const gameMatch = path.match(/^\/api\/games\/(.+)$/);
+  if (gameMatch && req.method === "GET" && !path.endsWith("/start") && !path.endsWith("/end")) {
+    const row = findById(games, "gameId", decodeURIComponent(gameMatch[1]));
+    if (!row) return notFound(res, "Game not found");
+    return json(res, 200, { data: toGameWire(row) });
+  }
+  const matchIdMatch = path.match(/^\/api\/matches\/(.+)$/);
+  if (matchIdMatch && req.method === "GET") {
+    const row = findById(games, "gameId", decodeURIComponent(matchIdMatch[1]));
+    if (!row) return notFound(res, "Game not found");
+    return json(res, 200, { data: toGameWire(row) });
   }
 
   // Teams
   if (path === "/api/teams" && req.method === "GET") {
     if (url.searchParams.get("empty") === "1") return json(res, 200, { data: [] });
-    return json(res, 200, { data: teams });
+    return json(res, 200, { data: teams.map(toTeamWire) });
   }
   const teamMatch = path.match(/^\/api\/teams\/(.+)$/);
   if (teamMatch && req.method === "GET") {
     const row = findById(teams, "teamId", decodeURIComponent(teamMatch[1]));
     if (!row) return notFound(res, "Team not found");
-    return json(res, 200, { data: row });
+    return json(res, 200, { data: toTeamWire(row) });
   }
 
   // Extra lookups used by the frontend (fields/rounds).
   if (path === "/api/fields" && req.method === "GET") {
     return json(res, 200, { data: fields });
   }
+  const fieldIdMatch = path.match(/^\/api\/fields\/(.+)$/);
+  if (fieldIdMatch && req.method === "GET") {
+    const row = findById(fields, "fieldId", decodeURIComponent(fieldIdMatch[1]));
+    if (!row) return notFound(res, "Field not found");
+    return json(res, 200, { data: row });
+  }
   if (path === "/api/rounds" && req.method === "GET") {
     return json(res, 200, { data: rounds });
   }
+  const roundIdMatch = path.match(/^\/api\/rounds\/(.+)$/);
+  if (roundIdMatch && req.method === "GET") {
+    const row = findById(rounds, "roundId", decodeURIComponent(roundIdMatch[1]));
+    if (!row) return notFound(res, "Round not found");
+    return json(res, 200, { data: row });
+  }
 
-  // Teacher CRUD (admin app). Async: reads the JSON body.
+  // Admin CRUD + generation (new frontend contract). Async: reads JSON body.
+  if (path.startsWith("/api/admin/")) {
+    void adminRouter(req, res, url, path);
+    return;
+  }
+
+  // Teacher CRUD (legacy). Async: reads the JSON body.
   if (req.method === "POST" || req.method === "PUT" || req.method === "DELETE") {
     void teacherRouter(req, res, url, path);
     return;
@@ -506,17 +822,19 @@ function router(req: IncomingMessage, res: ServerResponse) {
   return notFound(res, "Unknown endpoint");
 }
 
-const server = createServer(router);
-const wss = new WebSocketServer({ server, path: "/ws/live" });
-attachWebSocket(wss);
-
-server.listen(PORT, () => {
-  console.log(`[test-server] REST on http://localhost:${PORT}`);
-  console.log(`[test-server] WS on ws://localhost:${PORT}/ws/live`);
-  console.log(
-    "[test-server] Dev commands: game.created, game.updated, game.deleted, team.updated, field.updated, group.updated, round.updated",
-  );
-});
+for (const listenPort of LISTEN_PORTS) {
+  const server = createServer(router);
+  const wss = new WebSocketServer({ server, path: "/ws/live" });
+  attachWebSocket(wss);
+  server.listen(listenPort, () => {
+    console.log(`[test-server] REST on http://localhost:${listenPort}`);
+    console.log(`[test-server] WS on ws://localhost:${listenPort}/ws/live`);
+  });
+}
+console.log(`[test-server] data file: ${getDataFilePath()}`);
+console.log(
+  "[test-server] Dev commands: game.created, game.updated, game.deleted, team.updated, field.updated, group.updated, round.updated",
+);
 
 const rl = createInterface({ input: process.stdin, output: process.stdout });
 rl.on("line", (line) => handleDevCommand(line));

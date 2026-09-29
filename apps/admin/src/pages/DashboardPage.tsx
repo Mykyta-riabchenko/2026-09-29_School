@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAdminData } from "../hooks/useAdminData";
 import { useAdminState } from "../state/store";
 
@@ -10,7 +10,7 @@ export function DashboardPage() {
   const state = useAdminState();
   const navigate = useNavigate();
 
-  if (status === "loading") return <p>Loading dashboard…</p>;
+  if (status === "loading") return <p role="status">Loading dashboard…</p>;
   if (status === "error")
     return (
       <div>
@@ -51,7 +51,11 @@ export function DashboardPage() {
         <ul>
           {liveGames.map((g) => (
             <li key={g.gameId}>
-              {teamName(g.teamAId)} {g.scoreA} : {g.scoreB} {teamName(g.teamBId)} · {fieldName(g.fieldId)}
+              <Link to={`/games/${encodeURIComponent(g.gameId)}`}>
+                {teamName(g.teamAId)} {g.scoreA} : {g.scoreB} {teamName(g.teamBId)}
+              </Link>{" "}
+              · {fieldName(g.fieldId)} ·{" "}
+              <Link to={`/games/${encodeURIComponent(g.gameId)}/score`}>Open score</Link>
             </li>
           ))}
         </ul>
@@ -63,7 +67,9 @@ export function DashboardPage() {
         <ul>
           {upcomingGames.slice(0, 6).map((g) => (
             <li key={g.gameId}>
-              {fieldName(g.fieldId)} · {teamName(g.teamAId)} vs {teamName(g.teamBId)}
+              <Link to={`/games/${encodeURIComponent(g.gameId)}`}>
+                {fieldName(g.fieldId)} · {teamName(g.teamAId)} vs {teamName(g.teamBId)}
+              </Link>
             </li>
           ))}
         </ul>

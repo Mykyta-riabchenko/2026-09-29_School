@@ -8,8 +8,9 @@ export function GroupsPage() {
   const state = useAdminState();
   const [name, setName] = useState("");
   const [opError, setOpError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  if (status === "loading") return <p>Loading groups…</p>;
+  if (status === "loading") return <p role="status">Loading groups…</p>;
   if (status === "error")
     return (
       <div>
@@ -22,42 +23,73 @@ export function GroupsPage() {
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) {
+      setOpError("Group name is required.");
+      return;
+    }
+    setSaving(true);
     try {
-      await createGroup(name);
+      await createGroup(trimmed);
       setName("");
+      setOpError(null);
       await refresh();
     } catch (err) {
       setOpError(err instanceof Error ? err.message : "Create failed.");
+    } finally {
+      setSaving(false);
     }
   }
+
+  async function onRename(id: string, current: string) {
+    const next = window.prompt("Rename group", current);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed) {
+      setOpError("Group name is required.");
+      return;
+    }
+    try {
+      await updateGroup(id, trimmed);
+      setOpError(null);
+      await refresh();
+    } catch (err) {
+      setOpError(err instanceof Error ? err.message : "Rename failed.");
+    }
+  }
+
+  async function onDelete(id: string) {
+    if (!window.confirm("Delete group?")) return;
+    try {
+      await deleteGroup(id);
+      setOpError(null);
+      await refresh();
+    } catch (err) {
+      setOpError(err instanceof Error ? err.message : "Delete failed.");
+    }
+  }
+
+  const groups = [...state.groups.values()];
 
   return (
     <section aria-label="Manage groups">
       <h1>Groups</h1>
       <form onSubmit={(e) => void onCreate(e)}>
-        <input aria-label="Group name" value={name} onChange={(e) => setName(e.target.value)} placeholder="New group" />
-        <button type="submit">Create</button>
+        <input aria-label="Group name" value={name} onChange={(e) => setName(e.target.value)} placeholder="New group" required />
+        <button type="submit" disabled={saving}>
+          {saving ? "Saving…" : "Create"}
+        </button>
       </form>
       {opError ? <p role="alert">{opError}</p> : null}
+      {groups.length === 0 ? <p>No groups yet. Create the first group above.</p> : null}
       <ul>
-        {[...state.groups.values()].map((g) => (
+        {groups.map((g) => (
           <li key={g.groupId}>
             {g.name}{" "}
-            <button
-              type="button"
-              onClick={() => {
-                const next = window.prompt("Rename group", g.name);
-                if (next) void updateGroup(g.groupId, next).then(() => refresh());
-              }}
-            >
+            <button type="button" onClick={() => void onRename(g.groupId, g.name)}>
               Rename
             </button>{" "}
-            <button
-              type="button"
-              onClick={() => {
-                if (window.confirm("Delete group?")) void deleteGroup(g.groupId).then(() => refresh());
-              }}
-            >
+            <button type="button" onClick={() => void onDelete(g.groupId)}>
               Delete
             </button>
           </li>

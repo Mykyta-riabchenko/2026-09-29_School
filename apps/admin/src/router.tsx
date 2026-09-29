@@ -22,7 +22,20 @@ export function AdminRoutes() {
       <Route path="/teams" element={<TeamsPage />} />
       <Route path="/rounds" element={<RoundsPage />} />
       <Route path="/fields" element={<FieldsPage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+  );
+}
+
+export function NotFoundPage() {
+  return (
+    <section aria-label="Not found">
+      <h1>Page not found</h1>
+      <p>The page you requested does not exist.</p>
+      <p>
+        <a href="/">Back to dashboard</a>
+      </p>
+    </section>
   );
 }
 
@@ -37,7 +50,7 @@ const ENTRIES = [
 
 export function AdminNav() {
   return (
-    <nav aria-label="Admin">
+    <nav aria-label="Primary" className="app-nav">
       {ENTRIES.map((e) => (
         <NavLink key={e.to} to={e.to}>
           {e.label}

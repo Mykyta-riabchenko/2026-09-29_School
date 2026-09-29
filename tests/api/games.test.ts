@@ -24,10 +24,10 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-describe("GET /api/matches (doc §5.3)", () => {
+describe("GET /api/games (doc §5.3)", () => {
   it("loads games from the API", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [game] }),
       ),
     );
@@ -38,7 +38,7 @@ describe("GET /api/matches (doc §5.3)", () => {
 
   it("every game has round, field, two teams, referee and numeric scores", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [game] }),
       ),
     );
@@ -54,7 +54,7 @@ describe("GET /api/matches (doc §5.3)", () => {
 
   it("game IDs are treated as opaque strings", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [{ ...game, gameId: "enc:9f3:X" }] }),
       ),
     );
@@ -64,7 +64,7 @@ describe("GET /api/matches (doc §5.3)", () => {
 
   it("invalid/missing relationships are rejected at the boundary", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [{ gameId: "x" }] }),
       ),
     );
@@ -73,7 +73,7 @@ describe("GET /api/matches (doc §5.3)", () => {
 
   it("empty result is allowed", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [] }),
       ),
     );
@@ -83,7 +83,7 @@ describe("GET /api/matches (doc §5.3)", () => {
   it("500 is retryable", async () => {
     server.use(
       http.get(
-        `${API_BASE_URL}/api/matches`,
+        `${API_BASE_URL}/api/games`,
         () =>
           HttpResponse.json(
             { error: { code: "SERVER_ERROR", message: "boom" } },
@@ -97,7 +97,7 @@ describe("GET /api/matches (doc §5.3)", () => {
   it("malformed JSON is an API error", async () => {
     server.use(
       http.get(
-        `${API_BASE_URL}/api/matches`,
+        `${API_BASE_URL}/api/games`,
         () => new HttpResponse("nope{", { headers: { "Content-Type": "application/json" } }),
       ),
     );
@@ -107,10 +107,10 @@ describe("GET /api/matches (doc §5.3)", () => {
   });
 });
 
-describe("GET /api/matches/{id} (doc §5.4)", () => {
+describe("GET /api/games/{id} (doc §5.4)", () => {
   it("valid encoded ID returns 200 and preserves ID", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/:id`, () =>
+      http.get(`${API_BASE_URL}/api/games/:id`, () =>
         HttpResponse.json({ data: game }),
       ),
     );
@@ -121,7 +121,7 @@ describe("GET /api/matches/{id} (doc §5.4)", () => {
   it("404 renders not-found", async () => {
     server.use(
       http.get(
-        `${API_BASE_URL}/api/matches/:id`,
+        `${API_BASE_URL}/api/games/:id`,
         () =>
           HttpResponse.json(
             { error: { code: "RESOURCE_NOT_FOUND", message: "nf" } },
@@ -135,10 +135,10 @@ describe("GET /api/matches/{id} (doc §5.4)", () => {
   });
 });
 
-describe("GET /api/matches/filter/{filter} (doc §5.5)", () => {
+describe("GET /api/games/filter/{filter} (doc §5.5)", () => {
   it("valid round filter returns only matching games", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches/filter/:filter`, ({ params }) =>
+      http.get(`${API_BASE_URL}/api/games/filter/:filter`, ({ params }) =>
         HttpResponse.json({
           data: [game].filter((g) => g.roundId === params.filter),
         }),
@@ -151,7 +151,7 @@ describe("GET /api/matches/filter/{filter} (doc §5.5)", () => {
   it("invalid filter returns documented 400", async () => {
     server.use(
       http.get(
-        `${API_BASE_URL}/api/matches/filter/:filter`,
+        `${API_BASE_URL}/api/games/filter/:filter`,
         () =>
           HttpResponse.json(
             { error: { code: "BAD_REQUEST", message: "bad filter" } },

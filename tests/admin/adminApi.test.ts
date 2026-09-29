@@ -60,7 +60,7 @@ const gameRow = { ...gameInput, gameId: "g1" };
 describe("runtime config (admin doc §2, frontend doc §12)", () => {
   it("backend URL is configurable with localhost default, single source", () => {
     expect(RUNTIME_URL).toBe(
-      process.env.VITE_API_BASE_URL ?? "http://localhost:8080",
+      process.env.VITE_API_BASE_URL ?? "http://localhost:4000",
     );
     expect(API_BASE_URL).toBe(RUNTIME_URL);
   });
@@ -216,12 +216,12 @@ describe("flat admin API (admin doc §4)", () => {
     await expect(deleteField("f1")).resolves.toBeUndefined();
   });
 
-  it("games: read via /api/matches, write via teacher endpoints", async () => {
+  it("games: read via /api/games, write via teacher endpoints", async () => {
     server.use(
-      http.get(`${API_BASE_URL}/api/matches`, () =>
+      http.get(`${API_BASE_URL}/api/games`, () =>
         HttpResponse.json({ data: [gameRow] }),
       ),
-      http.get(`${API_BASE_URL}/api/matches/:id`, () =>
+      http.get(`${API_BASE_URL}/api/games/:id`, () =>
         HttpResponse.json({ data: gameRow }),
       ),
       http.post(`${API_BASE_URL}/api/teacher/games`, () =>
