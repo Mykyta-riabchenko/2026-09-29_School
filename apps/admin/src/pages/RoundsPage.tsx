@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createRound, deleteRound, generateConsolation, generateKnockout, generateRoundRobin, updateRound } from "../api/client";
 import { useAdminData } from "../hooks/useAdminData";
 import { useAdminState } from "../state/store";
@@ -13,6 +13,16 @@ export function RoundsPage() {
   const [saving, setSaving] = useState(false);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [menuFor, setMenuFor] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!menuFor) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuFor(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuFor]);
 
   if (status === "loading") return <p role="status">Loading rounds…</p>;
   if (status === "error")
@@ -104,15 +114,41 @@ export function RoundsPage() {
               <div className="list-sub">{[...state.games.values()].filter((g) => g.roundId === r.roundId).length} Spiele</div>
             </div>
             <div className="actions">
-              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("round-robin", r.roundId)}>
-                Generate round-robin
-              </button>
-              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("knockout", r.roundId)}>
-                Generate knockout
-              </button>
-              <button type="button" className="btn" disabled={generatingId !== null} onClick={() => void run("consolation", r.roundId)}>
-                Generate consolation
-              </button>
+              <div className="menu-wrap">
+                <button
+                  type="button"
+                  className="btn icon"
+                  aria-label="Spiele generieren"
+                  aria-haspopup="menu"
+                  aria-expanded={menuFor === r.roundId}
+                  disabled={generatingId !== null}
+                  onClick={() => setMenuFor((m) => (m === r.roundId ? null : r.roundId))}
+                >
+                  ⋮
+                </button>
+                {menuFor === r.roundId ? (
+                  <>
+                    <button type="button" className="menu-backdrop" aria-label="Menü schließen" onClick={() => setMenuFor(null)} />
+                    <div className="menu" role="menu" aria-label="Spiele generieren">
+                      {(["round-robin", "knockout", "consolation"] as const).map((kind) => (
+                        <button
+                          key={kind}
+                          type="button"
+                          role="menuitem"
+                          className="btn"
+                          disabled={generatingId !== null}
+                          onClick={() => {
+                            setMenuFor(null);
+                            void run(kind, r.roundId);
+                          }}
+                        >
+                          Generate {kind}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
               <button type="button" className="btn" onClick={() => { setOpError(null); setModal({ id: r.roundId, number: r.number }); }}>
                 Bearbeiten
               </button>

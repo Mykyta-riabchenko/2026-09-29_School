@@ -95,6 +95,12 @@ h1 { font-size: clamp(27px, 3vw, 40px); margin: 5px 0; }
 .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 4px 0 10px; }
 .section-head h2 { margin: 0; }
 .section-head small { color: var(--muted); }
+.seg { display: inline-flex; background: #edf3fa; border: 1px solid var(--line); border-radius: 999px; padding: 3px; gap: 2px; }
+.seg button {
+  border: 0; background: transparent; color: #53687f; font-size: 11px; font-weight: 900;
+  min-height: 32px; padding: 4px 12px; border-radius: 999px; white-space: nowrap;
+}
+.seg button.active { background: #fff; color: var(--navy); box-shadow: var(--shadow); }
 
 .match-list, .team-list, .court-list { display: grid; gap: 10px; }
 .match {
@@ -168,10 +174,6 @@ h1 { font-size: clamp(27px, 3vw, 40px); margin: 5px 0; }
   content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
   border-left: 3px solid rgba(8, 46, 99, 0.55);
 }
-.court:after {
-  content: ""; position: absolute; top: 10%; bottom: 10%; left: 15%; right: 15%;
-  border: 1px solid rgba(8, 46, 99, 0.24); border-radius: 4px;
-}
 .court-side {
   z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;
   text-align: center; padding: 16px 10px; font-weight: 950; overflow-wrap: anywhere; line-height: 1.08;
@@ -195,14 +197,22 @@ h1 { font-size: clamp(27px, 3vw, 40px); margin: 5px 0; }
   background: #fff; box-shadow: var(--shadow); overflow: visible; margin-bottom: 32px; cursor: pointer;
   padding: 0; width: 100%; font: inherit; color: inherit; text-align: left;
 }
-.tree-match:after { content: ""; position: absolute; right: -38px; top: 50%; width: 38px; border-top: 2px solid #aebed1; }
-.round-col:last-child .tree-match:after { display: none; }
+.round-col { position: relative; }
+.round-col:not(:last-child)::after {
+  content: ""; position: absolute; top: 0; bottom: 0; right: -19px;
+  border-left: 2px solid #aebed1;
+}
 .tree-team {
   min-height: 48px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between;
   gap: 8px; border-bottom: 1px solid var(--line); font-weight: 850; overflow-wrap: anywhere;
   width: 100%; background: transparent; border-left: 0; border-right: 0; border-top: 0; font: inherit;
-  cursor: pointer; text-align: left; color: inherit;
+  cursor: pointer; text-align: left; color: inherit; position: relative;
 }
+.tree-team.winner::after {
+  content: ""; position: absolute; top: 50%; right: -19px; width: 19px;
+  border-top: 2px solid #aebed1;
+}
+.round-col:last-child .tree-team.winner::after { display: none; }
 .tree-team:last-child { border-bottom: 0; }
 .tree-score { font-weight: 950; flex: 0 0 auto; }
 .tree-team.winner { background: #eef7ff; color: var(--navy); }
@@ -318,7 +328,8 @@ a { color: var(--blue); }
   .tree { grid-auto-columns: 245px; gap: 26px; padding: 4px 8px; }
   .round-col { width: 245px; }
   .tree-match { margin-bottom: 20px; }
-  .tree-match:after { right: -26px; width: 26px; }
+  .round-col:not(:last-child)::after { right: -13px; }
+  .tree-team.winner::after { right: -13px; width: 13px; }
   .vs-content { padding: 16px 10px; }
   .vs-main { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr); gap: 5px; }
   .vs-team.left { padding-left: 4px; }

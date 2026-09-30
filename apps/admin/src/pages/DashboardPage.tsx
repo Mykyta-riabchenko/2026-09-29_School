@@ -101,7 +101,6 @@ export function DashboardPage() {
         </div>
         <div className="card">
           <h2>Turnierstatus</h2>
-          <p className="muted">SCHEDULED → RUNNING → FINISHED (Status kommt vom Backend)</p>
           <div className="grid g2" style={{ marginTop: 12 }}>
             <div className="stat">
               <b>{freeFields.length}</b>

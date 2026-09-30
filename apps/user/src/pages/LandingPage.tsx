@@ -39,25 +39,29 @@ export function LandingPage() {
 
   const liveCount = [...state.games.values()].filter((g) => g.status === "RUNNING").length;
 
+  const [matchFilter, setMatchFilter] = useState<"live" | "planned">("live");
+
   const leaderboard = useMemo(() => {
-    const rows = [...state.teams.values()].map((t) => {
-      let wins = 0;
-      let played = 0;
-      let points = 0;
-      for (const g of state.games.values()) {
-        if (g.status !== "FINISHED") continue;
-        if (g.teamAId !== t.teamId && g.teamBId !== t.teamId) continue;
-        played += 1;
-        points += g.teamAId === t.teamId ? g.scoreA : g.scoreB;
-        if ((g.teamAId === t.teamId && g.scoreA > g.scoreB) || (g.teamBId === t.teamId && g.scoreB > g.scoreA)) wins += 1;
-      }
-      return { team: t, wins, played, points };
-    });
+    const rows = [...state.teams.values()]
+      .filter((t) => groupId === "ALL" || t.groupId === groupId)
+      .map((t) => {
+        let wins = 0;
+        let played = 0;
+        let points = 0;
+        for (const g of state.games.values()) {
+          if (g.status !== "FINISHED") continue;
+          if (g.teamAId !== t.teamId && g.teamBId !== t.teamId) continue;
+          played += 1;
+          points += g.teamAId === t.teamId ? g.scoreA : g.scoreB;
+          if ((g.teamAId === t.teamId && g.scoreA > g.scoreB) || (g.teamBId === t.teamId && g.scoreB > g.scoreA)) wins += 1;
+        }
+        return { team: t, wins, played, points };
+      });
     rows.sort((a, b) => b.wins - a.wins || b.points - a.points || a.team.name.localeCompare(b.team.name));
     return rows;
-  }, [state]);
+  }, [state, groupId]);
 
-  const upcoming = games.filter((g) => g.status !== "FINISHED");
+  const upcoming = games.filter((g) => (matchFilter === "live" ? g.status === "RUNNING" : g.status === "SCHEDULED"));
 
   return (
     <section aria-label="Tournament landing" className="view">
@@ -110,6 +114,14 @@ export function LandingPage() {
           <div className="section-head">
             <h2>Live &amp; geplant</h2>
             <small>{liveCount} live</small>
+          </div>
+          <div className="seg" role="group" aria-label="Live oder geplant filtern">
+            <button type="button" className={matchFilter === "live" ? "active" : ""} aria-pressed={matchFilter === "live"} onClick={() => setMatchFilter("live")}>
+              ● Live
+            </button>
+            <button type="button" className={matchFilter === "planned" ? "active" : ""} aria-pressed={matchFilter === "planned"} onClick={() => setMatchFilter("planned")}>
+              Geplant
+            </button>
           </div>
           <div className="match-list">
             {upcoming.length === 0 ? <div className="card empty">Keine passenden Spiele.</div> : null}

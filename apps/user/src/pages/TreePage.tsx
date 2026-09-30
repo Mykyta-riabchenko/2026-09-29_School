@@ -13,11 +13,13 @@ export function TreePage() {
 
   const rounds = useMemo(() => [...state.rounds.values()].sort((a, b) => a.number - b.number), [state]);
 
-  function phaseName(roundNumber: number, index: number): string {
-    if (roundNumber === 1) return "Pool Phase";
-    if (index === 1) return "Elimination";
-    if (index === 2) return "Semifinal";
-    return "Final";
+  // Last 4 rounds get final names, earlier ones get bracket fractions
+  // (1/16, 1/32, ...) counted back from the final.
+  function phaseName(index: number, total: number): string {
+    const fromEnd = total - 1 - index;
+    const finals = ["Finale", "Halbfinale", "Viertelfinale", "Achtelfinale"];
+    if (fromEnd < finals.length) return finals[fromEnd];
+    return `1/${2 ** fromEnd}`;
   }
 
   function setHighlight(id: string) {
@@ -77,7 +79,7 @@ export function TreePage() {
               return (
                 <div className="round-col" key={r.roundId}>
                   <div className="round-label">
-                    <strong>{phaseName(r.number, i)}</strong>
+                    <strong>{phaseName(i, rounds.length)}</strong>
                     <span>Runde {r.number}</span>
                   </div>
                   {games.length === 0 ? <div className="empty">Keine Paarung</div> : null}

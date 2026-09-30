@@ -8,11 +8,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 // User/public site (spec §1). Independent dev server on :5173.
 // Separate deployment artifact in dist/user (spec §2, §11).
 // Dev proxy for runs against a real backend: same-origin /api + /ws/live
-// are forwarded to VITE_PROXY_TARGET (else :8080), so the browser never
-// hits backend CORS. Use with VITE_API_BASE_URL="" (relative URLs).
+// are forwarded to VITE_PROXY_PUBLIC_TARGET (else :8080), so the browser
+// never hits backend CORS. Use with VITE_API_BASE_URL="" (relative URLs).
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, here, "");
-  const proxyTarget = env.VITE_PROXY_TARGET || "http://localhost:8080";
+  const proxyTarget =
+    env.VITE_PROXY_PUBLIC_TARGET || env.VITE_PROXY_TARGET || "http://localhost:8080";
   return {
     root: here,
     plugins: [react()],
