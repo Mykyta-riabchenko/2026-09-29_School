@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { StatusBadge, VsOverlay, fieldNameOf, roundOf, teamNameOf, useTournamentData } from "../components/public-ui";
+import { matchesQuery } from "../components/search";
 
 export function FieldsPage() {
   const { state, loading, error, retry } = useTournamentData();
@@ -8,13 +9,12 @@ export function FieldsPage() {
   const [vsId, setVsId] = useState<string | null>(null);
 
   const fields = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return [...state.fields.values()].filter((f) => {
       const names = [...state.games.values()]
         .filter((g) => g.fieldId === f.fieldId)
         .map((g) => `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)}`)
         .join(" ");
-      return `${f.name} ${names}`.toLowerCase().includes(q);
+      return matchesQuery(`${f.name} ${names}`, query);
     });
   }, [state, query]);
 

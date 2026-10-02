@@ -54,7 +54,7 @@ export function NotFoundPage() {
 const ENTRIES = [
   { to: "/", label: "Übersicht", icon: "◉", end: true },
   { to: "/teams", label: "Teams", icon: "▦", end: false },
-  { to: "/tree", label: "Baum", icon: "⌘", end: false },
+  { to: "/tree", label: "Spiele", icon: "⌘", end: false },
   { to: "/fields", label: "Felder", icon: "⌗", end: false },
 ];
 

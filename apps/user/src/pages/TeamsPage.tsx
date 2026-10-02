@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { groupNameOf, useTournamentData } from "../components/public-ui";
+import { matchesQuery } from "../components/search";
 
 export function TeamsPage() {
   const { state, loading, error, retry } = useTournamentData();
@@ -9,9 +10,10 @@ export function TeamsPage() {
   const navigate = useNavigate();
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return [...state.teams.values()].filter(
-      (t) => (!q || `${t.name} ${t.class}`.toLowerCase().includes(q)) && (groupId === "ALL" || t.groupId === groupId),
+      (t) =>
+        matchesQuery(t.name, query) &&
+        (groupId === "ALL" || t.groupId === groupId),
     );
   }, [state, query, groupId]);
 
@@ -36,7 +38,7 @@ export function TeamsPage() {
         <div className="controls">
           <input
             className="input"
-            placeholder="Team oder Klasse suchen …"
+            placeholder="Team suchen …"
             aria-label="Teams suchen"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

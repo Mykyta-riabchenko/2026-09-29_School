@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { StatusBadge, VsOverlay, fieldNameOf, roundOf, teamNameOf, useTournamentData } from "../components/public-ui";
+import { StatusBadge, VsOverlay, fieldNameOf, groupNameOf, roundOf, teamNameOf, useTournamentData } from "../components/public-ui";
+import { matchesQuery } from "../components/search";
 
 export function GamesPage() {
   const { state, loading, error, retry } = useTournamentData();
@@ -9,7 +10,6 @@ export function GamesPage() {
   const [vsId, setVsId] = useState<string | null>(null);
 
   const games = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return [...state.games.values()].filter((g) => {
       if (roundId !== "ALL" && g.roundId !== roundId) return false;
       if (groupId !== "ALL") {
@@ -17,10 +17,9 @@ export function GamesPage() {
         const gb = state.teams.get(g.teamBId)?.groupId;
         if (ga !== groupId && gb !== groupId) return false;
       }
-      if (!q) return true;
       const txt =
-        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} Runde ${roundOf(state, g.roundId)?.number ?? ""}`.toLowerCase();
-      return txt.includes(q);
+        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} Runde ${roundOf(state, g.roundId)?.number ?? ""} Gruppe ${groupNameOf(state, state.teams.get(g.teamAId)?.groupId ?? "")} Gruppe ${groupNameOf(state, state.teams.get(g.teamBId)?.groupId ?? "")}`;
+      return matchesQuery(txt, query);
     });
   }, [state, query, groupId, roundId]);
 

@@ -17,7 +17,7 @@ export function TeamsPage() {
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
     return [...state.teams.values()].filter(
-      (t) => (!q || `${t.name} ${t.class}`.toLowerCase().includes(q)) && (groupFilter === "ALL" || t.groupId === groupFilter),
+      (t) => (!q || t.name.toLowerCase().includes(q)) && (groupFilter === "ALL" || t.groupId === groupFilter),
     );
   }, [state, query, groupFilter]);
 
@@ -84,7 +84,7 @@ export function TeamsPage() {
       </div>
       <div className="card">
         <div className="toolbar" style={{ marginBottom: 12 }}>
-          <input className="search" placeholder="Team oder Klasse suchen …" aria-label="Teams suchen" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <input className="search" placeholder="Team suchen …" aria-label="Teams suchen" value={query} onChange={(e) => setQuery(e.target.value)} />
           <select className="select" aria-label="Gruppe filtern" value={groupFilter} onChange={(e) => setGroupFilter(e.target.value)}>
             <option value="ALL">Alle Gruppen</option>
             {[...state.groups.values()].map((g) => (
@@ -95,52 +95,33 @@ export function TeamsPage() {
           </select>
         </div>
         {opError ? <p role="alert">{opError}</p> : null}
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Team</th>
-                <th>Klasse</th>
-                <th>Gruppe</th>
-                <th>Spiele</th>
-                <th>Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={5}>
-                    <div className="empty">Kein Team.</div>
-                  </td>
-                </tr>
-              ) : null}
-              {rows.map((t) => {
-                const games = [...state.games.values()].filter((g) => g.teamAId === t.teamId || g.teamBId === t.teamId).length;
-                return (
-                  <tr key={t.teamId}>
-                    <td>{t.name}</td>
-                    <td>{t.class}</td>
-                    <td>Gruppe {state.groups.get(t.groupId)?.name ?? t.groupId}</td>
-                    <td>{games}</td>
-                    <td>
-                      <div className="actions">
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() => { setOpError(null); setModal({ id: t.teamId, name: t.name, cls: t.class, groupId: t.groupId }); }}
-                        >
-                          Bearbeiten
-                        </button>
-                        <button type="button" className="btn danger" onClick={() => setDeleteId(t.teamId)}>
-                          Löschen
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="list">
+          {rows.length === 0 ? <div className="empty">Kein Team.</div> : null}
+          {rows.map((t) => {
+            const games = [...state.games.values()].filter((g) => g.teamAId === t.teamId || g.teamBId === t.teamId).length;
+            return (
+              <div className="list-item" key={t.teamId}>
+                <div className="list-main">
+                  <div className="list-title">{t.name}</div>
+                  <div className="list-sub">
+                    {t.class} · Gruppe {state.groups.get(t.groupId)?.name ?? t.groupId} · {games} Spiele
+                  </div>
+                </div>
+                <div className="actions">
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => { setOpError(null); setModal({ id: t.teamId, name: t.name, cls: t.class, groupId: t.groupId }); }}
+                  >
+                    Bearbeiten
+                  </button>
+                  <button type="button" className="btn danger" onClick={() => setDeleteId(t.teamId)}>
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
       {modal ? (

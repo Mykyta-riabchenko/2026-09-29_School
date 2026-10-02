@@ -198,7 +198,8 @@ h1 { font-size: clamp(27px, 3vw, 40px); margin: 5px 0; }
   padding: 0; width: 100%; font: inherit; color: inherit; text-align: left;
 }
 .round-col { position: relative; }
-.round-col:not(:last-child)::after {
+.round-matches { position: relative; }
+.round-col:not(:last-child) .round-matches:has(> .tree-match)::after {
   content: ""; position: absolute; top: 0; bottom: 0; right: -19px;
   border-left: 2px solid #aebed1;
 }
@@ -328,7 +329,7 @@ a { color: var(--blue); }
   .tree { grid-auto-columns: 245px; gap: 26px; padding: 4px 8px; }
   .round-col { width: 245px; }
   .tree-match { margin-bottom: 20px; }
-  .round-col:not(:last-child)::after { right: -13px; }
+  .round-col:not(:last-child) .round-matches:has(> .tree-match)::after { right: -13px; }
   .tree-team.winner::after { right: -13px; width: 13px; }
   .vs-content { padding: 16px 10px; }
   .vs-main { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr); gap: 5px; }

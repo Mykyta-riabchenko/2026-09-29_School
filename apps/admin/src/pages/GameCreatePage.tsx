@@ -41,8 +41,8 @@ export function GameCreatePage() {
     setSaving(true);
     setError(null);
     try {
-      const created = await createGame(form);
-      navigate(`/games/${encodeURIComponent(created.gameId)}/score`);
+      await createGame(form);
+      navigate("/games");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Create failed.");
     } finally {
@@ -60,8 +60,8 @@ export function GameCreatePage() {
         <div>
           <div className="eyebrow">Spielverwaltung</div>
           <h1>Create game</h1>
-          <p className="muted">
-            <Link to="/games" aria-label="Back to games">
+          <p>
+            <Link to="/games" aria-label="Back to games" className="btn btn-sm">
               ← Alle Spiele
             </Link>
           </p>

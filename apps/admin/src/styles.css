@@ -53,6 +53,7 @@ button { touch-action: manipulation; cursor: pointer; }
 .btn.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
 .btn.danger { background: #fff1f1; border-color: #ffd0d0; color: #b12222; }
 .btn.icon { width: 46px; padding: 0; }
+.btn-sm { min-height: 36px; padding: 6px 12px; font-size: 12px; border-radius: 10px; }
 .btn:active { transform: scale(0.98); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 

@@ -39,7 +39,13 @@ export function GamesPage() {
     try {
       const saved = await startGame(id);
       store.upsertGame(saved);
-      await refresh();
+      // Best effort: the mutation already succeeded and is visible.
+      // A refresh hiccup must not raise an alert over it.
+      try {
+        await refresh();
+      } catch {
+        /* keep optimistic state */
+      }
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "Start failed.");
     } finally {
@@ -53,7 +59,13 @@ export function GamesPage() {
     try {
       const saved = await endGame(id);
       store.upsertGame(saved);
-      await refresh();
+      // Best effort: the mutation already succeeded and is visible.
+      // A refresh hiccup must not raise an alert over it.
+      try {
+        await refresh();
+      } catch {
+        /* keep optimistic state */
+      }
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "End failed.");
     } finally {
@@ -132,68 +144,46 @@ export function GamesPage() {
         {games.length === 0 ? (
           <div className="empty">Keine Spiele. Lege oben ein neues Spiel an.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Spiel</th>
-                  <th>Runde / Feld</th>
-                  <th>Status</th>
-                  <th>Score</th>
-                  <th>Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {games.map((g) => (
-                  <tr key={g.gameId}>
-                    <td>
-                      <b>{teamName(g.teamAId)}</b>
-                      <br />
-                      {teamName(g.teamBId)}
-                    </td>
-                    <td>
-                      Runde {roundNum(g.roundId)}
-                      <br />
-                      {fieldName(g.fieldId)}
-                    </td>
-                    <td>
-                      <AdminStatusBadge status={g.status} />
-                    </td>
-                    <td>
-                      <b>
-                        {g.scoreA}:{g.scoreB}
-                      </b>
-                    </td>
-                    <td>
-                      <div className="actions">
-                        {g.status !== "FINISHED" ? (
-                          g.status === "RUNNING" ? (
-                            <button type="button" className="btn primary" disabled={pendingId === g.gameId} onClick={() => navigate(`/games/${encodeURIComponent(g.gameId)}/score`)}>
-                              {pendingId === g.gameId ? "…" : "Zählen"}
-                            </button>
-                          ) : (
-                            <button type="button" className="btn primary" disabled={pendingId === g.gameId} onClick={() => void onStart(g.gameId)}>
-                              {pendingId === g.gameId ? "Working…" : "Start"}
-                            </button>
-                          )
-                        ) : null}
-                        {g.status === "RUNNING" ? (
-                          <button type="button" className="btn" disabled={pendingId === g.gameId} onClick={() => void onEnd(g.gameId)}>
-                            Finish
-                          </button>
-                        ) : null}
-                        <button type="button" className="btn" onClick={() => navigate(`/games/${encodeURIComponent(g.gameId)}`)}>
-                          Öffnen
-                        </button>
-                        <button type="button" className="btn danger" disabled={pendingId === g.gameId} onClick={() => setDeleteId(g.gameId)}>
-                          Löschen
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="list">
+            {games.map((g) => (
+              <div className="list-item" key={g.gameId}>
+                <div className="list-main">
+                  <div className="list-title">
+                    {teamName(g.teamAId)} – {teamName(g.teamBId)}
+                  </div>
+                  <div className="list-sub">
+                    Runde {roundNum(g.roundId)} · {fieldName(g.fieldId)} · {g.scoreA}:{g.scoreB}
+                  </div>
+                  <div style={{ marginTop: 6 }}>
+                    <AdminStatusBadge status={g.status} />
+                  </div>
+                </div>
+                <div className="actions">
+                  {g.status !== "FINISHED" ? (
+                    g.status === "RUNNING" ? (
+                      <button type="button" className="btn primary" disabled={pendingId === g.gameId} onClick={() => navigate(`/games/${encodeURIComponent(g.gameId)}/score`)}>
+                        {pendingId === g.gameId ? "…" : "Zählen"}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn primary" disabled={pendingId === g.gameId} onClick={() => void onStart(g.gameId)}>
+                        {pendingId === g.gameId ? "Working…" : "Start"}
+                      </button>
+                    )
+                  ) : null}
+                  {g.status === "RUNNING" ? (
+                    <button type="button" className="btn" disabled={pendingId === g.gameId} onClick={() => void onEnd(g.gameId)}>
+                      Finish
+                    </button>
+                  ) : null}
+                  <button type="button" className="btn" onClick={() => navigate(`/games/${encodeURIComponent(g.gameId)}`)}>
+                    Öffnen
+                  </button>
+                  <button type="button" className="btn danger" disabled={pendingId === g.gameId} onClick={() => setDeleteId(g.gameId)}>
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

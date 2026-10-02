@@ -34,8 +34,8 @@ export function GameDetailsPage() {
           <h1>
             {state.teams.get(game.teamAId)?.name ?? game.teamAId} vs {state.teams.get(game.teamBId)?.name ?? game.teamBId}
           </h1>
-          <p className="muted">
-            <Link to="/games" aria-label="Back to games">
+          <p>
+            <Link to="/games" aria-label="Back to games" className="btn btn-sm">
               ← Alle Spiele
             </Link>
           </p>

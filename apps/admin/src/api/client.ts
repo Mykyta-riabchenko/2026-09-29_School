@@ -232,8 +232,18 @@ export async function generateGames(roundId: Id, kind: GenerationKind): Promise<
     `/api/admin/rounds/${encodeURIComponent(roundId)}/generate-games/${kind}`,
     "POST",
   );
-  if (!Array.isArray(data)) throw new AdminApiError(500, "INVALID_RESPONSE", "Expected array");
-  return data.map(mapGameResponse);
+  if (Array.isArray(data)) return data.map(mapGameResponse);
+  // Some backends answer with a single game object instead of a list.
+  // The caller refreshes the list afterwards, so never fail the whole
+  // flow here when the creation itself succeeded.
+  if (typeof data === "object" && data !== null) {
+    try {
+      return [mapGameResponse(data)];
+    } catch {
+      return [];
+    }
+  }
+  return [];
 }
 export async function generateRoundRobin(roundId: Id): Promise<Game[]> {
   return generateGames(roundId, "round-robin");

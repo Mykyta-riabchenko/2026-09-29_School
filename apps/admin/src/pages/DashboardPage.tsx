@@ -72,9 +72,9 @@ export function DashboardPage() {
         <div className="card">
           <div className="section-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h2>Live-Spiele</h2>
-            <small>
-              <Link to="/games">Alle Spiele</Link>
-            </small>
+            <Link to="/games" className="btn btn-sm">
+              Alle Spiele
+            </Link>
           </div>
           <div className="list">
             {liveGames.length === 0 ? <div className="empty">Keine Live-Spiele.</div> : null}

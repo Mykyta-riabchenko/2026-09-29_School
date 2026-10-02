@@ -10,6 +10,7 @@ import {
   teamNameOf,
   useTournamentData,
 } from "../components/public-ui";
+import { matchesQuery } from "../components/search";
 
 // Public tournament landing (spec §3). Tournament presentation only:
 // current round, live games, fields, groups, leaderboard, public nav.
@@ -22,7 +23,6 @@ export function LandingPage() {
   const [vsId, setVsId] = useState<string | null>(null);
 
   const games = useMemo(() => {
-    const q = query.trim().toLowerCase();
     return [...state.games.values()].filter((g) => {
       if (groupId !== "ALL") {
         const ga = state.teams.get(g.teamAId)?.groupId;
@@ -30,10 +30,9 @@ export function LandingPage() {
         if (ga !== groupId && gb !== groupId) return false;
       }
       if (roundId !== "ALL" && g.roundId !== roundId) return false;
-      if (!q) return true;
       const txt =
-        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} ${roundOf(state, g.roundId)?.number ?? ""}`.toLowerCase();
-      return txt.includes(q);
+        `${teamNameOf(state, g.teamAId)} ${teamNameOf(state, g.teamBId)} ${fieldNameOf(state, g.fieldId)} ${roundOf(state, g.roundId)?.number ?? ""} Gruppe ${groupNameOf(state, state.teams.get(g.teamAId)?.groupId ?? "")} Gruppe ${groupNameOf(state, state.teams.get(g.teamBId)?.groupId ?? "")}`;
+      return matchesQuery(txt, query);
     });
   }, [state, query, groupId, roundId]);
 
@@ -69,33 +68,6 @@ export function LandingPage() {
         <div>
           <div className="eyebrow">Live-Turnier</div>
           <h1>ATIW Volleyballturnier</h1>
-        </div>
-        <div className="controls">
-          <input
-            className="input"
-            placeholder="Team oder Spiel suchen …"
-            aria-label="Team oder Spiel suchen"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
-            <option value="ALL">Alle Gruppen</option>
-            {[...state.groups.values()].map((g) => (
-              <option key={g.groupId} value={g.groupId}>
-                Gruppe {g.name}
-              </option>
-            ))}
-          </select>
-          <select className="select" aria-label="Runde filtern" value={roundId} onChange={(e) => setRoundId(e.target.value)}>
-            <option value="ALL">Alle Runden</option>
-            {[...state.rounds.values()]
-              .sort((a, b) => a.number - b.number)
-              .map((r) => (
-                <option key={r.roundId} value={r.roundId}>
-                  Runde {r.number}
-                </option>
-              ))}
-          </select>
         </div>
       </div>
 
@@ -155,6 +127,33 @@ export function LandingPage() {
           </div>
         </div>
         <div>
+          <div className="controls" style={{ marginBottom: 12 }}>
+            <input
+              className="input"
+              placeholder="Team oder Spiel suchen …"
+              aria-label="Team oder Spiel suchen"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <select className="select" aria-label="Gruppe filtern" value={groupId} onChange={(e) => setGroupId(e.target.value)}>
+              <option value="ALL">Alle Gruppen</option>
+              {[...state.groups.values()].map((g) => (
+                <option key={g.groupId} value={g.groupId}>
+                  Gruppe {g.name}
+                </option>
+              ))}
+            </select>
+            <select className="select" aria-label="Runde filtern" value={roundId} onChange={(e) => setRoundId(e.target.value)}>
+              <option value="ALL">Alle Runden</option>
+              {[...state.rounds.values()]
+                .sort((a, b) => a.number - b.number)
+                .map((r) => (
+                  <option key={r.roundId} value={r.roundId}>
+                    Runde {r.number}
+                  </option>
+                ))}
+            </select>
+          </div>
           <div className="section-head">
             <h2>Gruppenwertung</h2>
             <Link to="/leaderboard" className="btn btn-sm">

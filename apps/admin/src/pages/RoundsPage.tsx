@@ -47,7 +47,9 @@ export function RoundsPage() {
           : kind === "knockout"
             ? await generateKnockout(roundId)
             : await generateConsolation(roundId);
-      setGenMsg(`Generated ${games.length} games (${kind}).`);
+      setGenMsg(
+        games.length > 0 ? `Generated ${games.length} games (${kind}).` : "Spiele angelegt. Liste aktualisiert.",
+      );
       await refresh();
     } catch (e) {
       setOpError(e instanceof Error ? e.message : "Generation failed.");
@@ -107,7 +109,13 @@ export function RoundsPage() {
       {genMsg ? <p role="status">{genMsg}</p> : null}
       <div className="list">
         {rounds.length === 0 ? <div className="card empty">Noch keine Runden.</div> : null}
-        {rounds.map((r) => (
+        {rounds.map((r, idx) => {
+          // Generating is blocked while the previous round still has
+          // unfinished games. The first round is always allowed.
+          const prev = idx > 0 ? rounds[idx - 1] : null;
+          const prevGames = prev ? [...state.games.values()].filter((g) => g.roundId === prev.roundId) : [];
+          const prevDone = !prev || (prevGames.length > 0 && prevGames.every((g) => g.status === "FINISHED"));
+          return (
           <div className="list-item" key={r.roundId}>
             <div className="list-main">
               <div className="list-title">Runde {r.number}</div>
@@ -121,7 +129,8 @@ export function RoundsPage() {
                   aria-label="Spiele generieren"
                   aria-haspopup="menu"
                   aria-expanded={menuFor === r.roundId}
-                  disabled={generatingId !== null}
+                  disabled={generatingId !== null || !prevDone}
+                  title={prevDone ? undefined : "Beende zuerst alle Spiele der vorherigen Runde."}
                   onClick={() => setMenuFor((m) => (m === r.roundId ? null : r.roundId))}
                 >
                   ⋮
@@ -157,7 +166,8 @@ export function RoundsPage() {
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
       {modal ? (
         <Modal title={modal.id ? "Runde bearbeiten" : "Neue Runde"} onClose={() => setModal(null)}>

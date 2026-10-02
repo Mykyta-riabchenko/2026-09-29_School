@@ -82,6 +82,7 @@ export function TreePage() {
                     <strong>{phaseName(i, rounds.length)}</strong>
                     <span>Runde {r.number}</span>
                   </div>
+                  <div className="round-matches">
                   {games.length === 0 ? <div className="empty">Keine Paarung</div> : null}
                   {games.map((g) => (
                     <div key={g.gameId} className="tree-match">
@@ -119,6 +120,7 @@ export function TreePage() {
                       </button>
                     </div>
                   ))}
+                  </div>
                 </div>
               );
             })}
